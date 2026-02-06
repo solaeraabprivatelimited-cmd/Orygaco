@@ -530,7 +530,7 @@ export function AuthFlow({ onNavigate, initialUserType = null, initialScreen = '
               </div>
 
               <Button 
-                className="w-full" 
+                className="w-full bg-[rgb(62,104,230)]" 
                 size="lg"
                 onClick={handleLogin}
                 disabled={loading}
