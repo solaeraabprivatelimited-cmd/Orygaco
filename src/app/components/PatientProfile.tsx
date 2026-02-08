@@ -6,6 +6,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { supabase } from '@/lib/supabase';
+import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
 
 interface PatientProfileProps {
@@ -33,27 +34,49 @@ export function PatientProfile({ onNavigate, onBack }: PatientProfileProps) {
 
   const fetchProfile = async () => {
     try {
+      // 1. Try Supabase Auth
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        onNavigate('auth');
+      
+      if (user) {
+        setProfile({
+          full_name: user.user_metadata?.full_name || '',
+          email: user.email || '',
+          phone: user.user_metadata?.phone || '',
+          address: user.user_metadata?.address || '',
+          dob: user.user_metadata?.dob || '',
+          blood_group: user.user_metadata?.blood_group || '',
+          allergies: user.user_metadata?.allergies || '',
+          avatar_url: user.user_metadata?.avatar_url || ''
+        });
         return;
       }
 
-      // In a real app, we'd fetch from a 'patients' table. 
-      // For now, we'll use user_metadata and some placeholders or local state storage if available.
-      // Since we don't have a full backend schema defined for patients yet in the prompt instructions,
-      // we'll rely on user_metadata.
+      // 2. Fallback to LocalStorage (Custom Auth)
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('authToken');
+
+      if (storedUser && storedToken) {
+        try {
+            const parsedUser = JSON.parse(storedUser);
+            setProfile({
+                full_name: parsedUser.full_name || parsedUser.name || '',
+                email: parsedUser.email || '',
+                phone: parsedUser.phone || parsedUser.mobile_number || '',
+                address: parsedUser.address || '',
+                dob: parsedUser.dob || parsedUser.age ? '' : '', // Age is often stored, dob might be missing
+                blood_group: parsedUser.blood_group || '',
+                allergies: parsedUser.allergies || '',
+                avatar_url: parsedUser.avatar_url || ''
+            });
+            return;
+        } catch (e) {
+            console.error("Error parsing local user", e);
+        }
+      }
+
+      // 3. If neither, redirect
+      onNavigate('auth');
       
-      setProfile({
-        full_name: user.user_metadata?.full_name || '',
-        email: user.email || '',
-        phone: user.user_metadata?.phone || '',
-        address: user.user_metadata?.address || '',
-        dob: user.user_metadata?.dob || '',
-        blood_group: user.user_metadata?.blood_group || '',
-        allergies: user.user_metadata?.allergies || '',
-        avatar_url: user.user_metadata?.avatar_url || ''
-      });
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile');
@@ -65,19 +88,66 @@ export function PatientProfile({ onNavigate, onBack }: PatientProfileProps) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          full_name: profile.full_name,
-          phone: profile.phone,
-          address: profile.address,
-          dob: profile.dob,
-          blood_group: profile.blood_group,
-          allergies: profile.allergies
-          // Avatar upload would be separate
-        }
-      });
+      // Check if we are using Supabase Auth
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+          const { error } = await supabase.auth.updateUser({
+            data: {
+              full_name: profile.full_name,
+              phone: profile.phone,
+              address: profile.address,
+              dob: profile.dob,
+              blood_group: profile.blood_group,
+              allergies: profile.allergies
+            }
+          });
+          if (error) throw error;
+      } else {
+          // Custom Auth: Update LocalStorage and Backend
+          const storedUser = localStorage.getItem('user');
+          const storedToken = localStorage.getItem('authToken');
+          
+          if (storedUser) {
+              const parsedUser = JSON.parse(storedUser);
+              const updatedUser = {
+                  ...parsedUser,
+                  full_name: profile.full_name,
+                  name: profile.full_name, // Sync name fields
+                  phone: profile.phone,
+                  address: profile.address,
+                  dob: profile.dob,
+                  blood_group: profile.blood_group,
+                  allergies: profile.allergies
+              };
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+              
+              // Persist to backend
+              if (storedToken && projectId) {
+                 const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/patient/profile`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${publicAnonKey}`
+                    },
+                    body: JSON.stringify({
+                        authToken: storedToken,
+                        full_name: profile.full_name,
+                        phone: profile.phone,
+                        address: profile.address,
+                        dob: profile.dob,
+                        blood_group: profile.blood_group,
+                        allergies: profile.allergies
+                    })
+                 });
+                 
+                 if (!response.ok) {
+                    console.warn('Backend update failed, but local storage updated');
+                 }
+              }
+          }
+      }
 
-      if (error) throw error;
       toast.success('Profile updated successfully');
     } catch (error: any) {
       console.error('Error updating profile:', error);

@@ -119,25 +119,25 @@ export function DoctorDashboard({ onNavigate }: DoctorDashboardProps) {
              };
 
              // 1. Fetch KPIs
-             fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/dashboard/kpis`, { headers })
+             fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/dashboard/kpis`, { headers })
                .then(res => res.json())
                .then(data => setKpis(data))
                .catch(err => console.error("KPI fetch error", err));
 
              // 2. Fetch Next Appointment
-             fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/dashboard/next-appointment`, { headers })
+             fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/dashboard/next-appointment`, { headers })
                .then(res => res.json())
                .then(data => setNextPatient(data))
                .catch(err => console.error("Next Patient fetch error", err));
 
              // 3. Fetch Action Items
-             fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/dashboard/action-items`, { headers })
+             fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/dashboard/action-items`, { headers })
                .then(res => res.json())
                .then(data => setActionItems(Array.isArray(data) ? data : []))
                .catch(err => console.error("Action Items fetch error", err));
 
              // 4. Fetch Today's Schedule (Enhanced)
-             fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/dashboard/today-schedule`, { headers })
+             fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/dashboard/today-schedule`, { headers })
                .then(res => res.json())
                .then(data => setTodaySchedule(Array.isArray(data) ? data : []))
                .catch(err => console.error("Schedule fetch error", err));
@@ -162,7 +162,7 @@ export function DoctorDashboard({ onNavigate }: DoctorDashboardProps) {
           return;
       }
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/slots`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/slots`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ export function DoctorDashboard({ onNavigate }: DoctorDashboardProps) {
           if (!session) return;
 
           const toastId = toast.loading('Updating availability...');
-          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/availability/temporary`, {
+          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/availability/temporary`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',

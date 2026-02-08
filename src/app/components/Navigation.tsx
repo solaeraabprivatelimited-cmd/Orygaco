@@ -13,9 +13,10 @@ interface NavigationProps {
   isDoctorMode?: boolean;
   userRole?: 'guest' | 'patient' | 'doctor' | 'hospital';
   isAuthenticated?: boolean;
+  onLogout?: () => void;
 }
 
-export function Navigation({ currentView, onNavigate, isDoctorMode = false, userRole = 'guest', isAuthenticated = false }: NavigationProps) {
+export function Navigation({ currentView, onNavigate, isDoctorMode = false, userRole = 'guest', isAuthenticated = false, onLogout }: NavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const currentLogo = isDoctorMode ? doctorLogo : logo;
   
@@ -67,8 +68,12 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    onNavigate('home');
+    if (onLogout) {
+        await onLogout();
+    } else {
+        await supabase.auth.signOut();
+        onNavigate('home');
+    }
     setMobileMenuOpen(false);
   };
 

@@ -11,6 +11,7 @@ import OrygaDNill from '../../imports/OrygaDNill';
 import OrygaPNill from '../../imports/OrygaPNill-226-129';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { projectId, publicAnonKey } from '/utils/supabase/info';
 
 type AuthScreen = 'landing' | 'login' | 'signup' | 'otp' | 'forgot-password' | 'onboarding';
 type UserType = 'patient' | 'doctor' | 'hospital' | null;
@@ -50,6 +51,84 @@ export function AuthFlow({ onNavigate, initialUserType = null, initialScreen = '
     gstin: '',
     facilityType: 'Hospital'
   });
+
+  const [otp, setOtp] = useState('');
+
+  const handleSendOTP = async () => {
+    if (!formData.phone) {
+        toast.error("Please enter your mobile number");
+        return;
+    }
+    setLoading(true);
+    try {
+        // Note: Using the specific server function name from the environment
+        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/auth/otp/send`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${publicAnonKey}`
+            },
+            body: JSON.stringify({ mobile_number: formData.phone })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+            throw new Error(errorData.error || 'Failed to send OTP');
+        }
+
+        const data = await response.json();
+        if (data.otp) toast.success(`Dev OTP: ${data.otp}`);
+        setCurrentScreen('otp');
+    } catch (e: any) {
+        console.error(e);
+        toast.error(e.message || "Failed to send OTP");
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/auth/otp/verify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${publicAnonKey}`
+            },
+            body: JSON.stringify({ mobile_number: formData.phone, otp })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Verification failed' }));
+            throw new Error(errorData.error || 'Verification failed');
+        }
+
+        const data = await response.json();
+        
+        if (data.session?.access_token) {
+            localStorage.setItem('authToken', data.session.access_token);
+            // Also set basic user info
+            localStorage.setItem('user', JSON.stringify(data.user));
+            
+            if (data.isNewUser) {
+                localStorage.setItem('isNewUser', 'true');
+            } else {
+                localStorage.removeItem('isNewUser');
+            }
+            
+            toast.success("Logged in successfully");
+            onNavigate('patient-app'); 
+        } else {
+            toast.error(data.error || "Verification failed");
+        }
+      } catch (e) {
+          console.error(e);
+          toast.error("Verification failed");
+      } finally {
+          setLoading(false);
+      }
+  };
 
   const themeStyles = userType === 'doctor' ? {
     '--primary': '#1890FF',
@@ -232,7 +311,7 @@ export function AuthFlow({ onNavigate, initialUserType = null, initialScreen = '
       
       // Use custom backend endpoint for signup to bypass email verification requirement
       const { projectId, publicAnonKey } = await import('/utils/supabase/info');
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/signup`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -469,105 +548,134 @@ export function AuthFlow({ onNavigate, initialUserType = null, initialScreen = '
             </div>
 
             <div className="space-y-4">
-              {showResend && (
-                <Alert variant="destructive" className="mb-4">
-                  <Shield className="h-4 w-4" />
-                  <AlertTitle>Email not confirmed</AlertTitle>
-                  <AlertDescription>
-                    Please check your email inbox for the confirmation link. You cannot login until you verify your email address.
-                  </AlertDescription>
-                </Alert>
-              )}
+              {userType === 'patient' ? (
+                <>
+                    <div>
+                        <Label htmlFor="phone">Mobile Number</Label>
+                        <div className="relative mt-2">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            id="phone"
+                            type="tel"
+                            placeholder="+91 98765 43210"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            className="pl-10"
+                        />
+                        </div>
+                    </div>
+                    <Button 
+                        className="w-full bg-[rgb(230,62,109)]" 
+                        size="lg"
+                        onClick={handleSendOTP}
+                        disabled={loading}
+                    >
+                        {loading ? 'Sending OTP...' : 'Get OTP'}
+                    </Button>
+                </>
+              ) : (
+                <>
+                  {showResend && (
+                    <Alert variant="destructive" className="mb-4">
+                      <Shield className="h-4 w-4" />
+                      <AlertTitle>Email not confirmed</AlertTitle>
+                      <AlertDescription>
+                        Please check your email inbox for the confirmation link. You cannot login until you verify your email address.
+                      </AlertDescription>
+                    </Alert>
+                  )}
 
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <div className="relative mt-2">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+                  <div>
+                    <Label htmlFor="email">Email Address</Label>
+                    <div className="relative mt-2">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="name@example.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
 
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <div className="relative mt-2">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="pl-10 pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  <div>
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative mt-2">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="pl-10 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" className="rounded border-border" />
+                      <span className="text-muted-foreground">Remember me</span>
+                    </label>
+                    <button 
+                      onClick={() => setCurrentScreen('forgot-password')}
+                      className="text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+
+                  <Button 
+                    className="w-full bg-[rgb(230,62,109)]" 
+                    size="lg"
+                    onClick={handleLogin}
+                    disabled={loading}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+                    {loading ? 'Signing in...' : 'Sign In'}
+                  </Button>
 
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded border-border" />
-                  <span className="text-muted-foreground">Remember me</span>
-                </label>
-                <button 
-                  onClick={() => setCurrentScreen('forgot-password')}
-                  className="text-primary hover:underline"
-                >
-                  Forgot password?
-                </button>
-              </div>
+                  {showResend && (
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      onClick={handleResendVerification}
+                      disabled={loading}
+                    >
+                      Resend Verification Email
+                    </Button>
+                  )}
+                  
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-border"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 bg-white text-muted-foreground">OR</span>
+                    </div>
+                  </div>
 
-              <Button 
-                className="w-full bg-[rgb(62,104,230)]" 
-                size="lg"
-                onClick={handleLogin}
-                disabled={loading}
-              >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </Button>
-
-              {showResend && (
-                <Button
-                  variant="secondary"
-                  className="w-full"
-                  onClick={handleResendVerification}
-                  disabled={loading}
-                >
-                  Resend Verification Email
-                </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      toast.info('Google Auth integration pending in backend settings');
+                    }}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Continue with Google
+                  </Button>
+                </>
               )}
-
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-muted-foreground">OR</span>
-                </div>
-              </div>
-
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => {
-                  toast.info('Google Auth integration pending in backend settings');
-                }}
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Continue with Google
-              </Button>
             </div>
 
             <div className="mt-6 text-center text-sm">
@@ -858,6 +966,70 @@ export function AuthFlow({ onNavigate, initialUserType = null, initialScreen = '
         </div>
       </div>
     );
+  }
+
+  // OTP Verification Screen
+  if (currentScreen === 'otp') {
+      return (
+      <div 
+        className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background flex items-center justify-center px-4 py-8"
+        style={themeStyles}
+      >
+        <div className="max-w-md w-full">
+          <button 
+            onClick={() => setCurrentScreen('login')}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Login
+          </button>
+
+          <Card className="p-8">
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <SmallLogoComponent />
+                <span className="text-2xl tracking-tight">ORYGA</span>
+              </div>
+              <h2 className="text-2xl mb-2">Verify OTP</h2>
+              <p className="text-muted-foreground">Enter the code sent to {formData.phone}</p>
+            </div>
+
+            <div className="space-y-4">
+                <div>
+                    <Label htmlFor="otp">One-Time Password</Label>
+                    <Input
+                        id="otp"
+                        placeholder="123456"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        className="text-center tracking-widest text-lg"
+                        maxLength={6}
+                    />
+                </div>
+
+                <Button 
+                    className="w-full bg-[rgb(230,62,109)]" 
+                    size="lg"
+                    onClick={handleVerifyOTP}
+                    disabled={loading}
+                >
+                    {loading ? 'Verifying...' : 'Verify & Login'}
+                </Button>
+                
+                <div className="text-center mt-4">
+                    <button 
+                        onClick={handleSendOTP} 
+                        className="text-sm text-primary hover:underline"
+                        disabled={loading}
+                    >
+                        Resend Code
+                    </button>
+                </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+      );
   }
 
   // Forgot Password Screen - Kept same logic but mock as supabase implementation needs email logic

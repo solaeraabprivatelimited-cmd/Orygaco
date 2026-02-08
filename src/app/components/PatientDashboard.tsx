@@ -6,6 +6,16 @@ import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { ScrollArea, ScrollBar } from './ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { VoiceAssistant } from './VoiceAssistant';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 import { motion } from 'motion/react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useEffect, useState } from 'react';
@@ -35,6 +45,76 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [careView, setCareView] = useState<'doctors' | 'hospitals'>('doctors');
   
+  // Onboarding State
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
+  const [onboardingData, setOnboardingData] = useState({
+      full_name: '',
+      age: '',
+      gender: '',
+      email: ''
+  });
+
+  useEffect(() => {
+      // Check if new user
+      const isNewUser = localStorage.getItem('isNewUser') === 'true';
+      if (isNewUser && user) {
+          setShowOnboarding(true);
+          if (user.email && !user.email.includes('placeholder')) {
+              setOnboardingData(prev => ({ ...prev, email: user.email }));
+          }
+      }
+  }, [user]);
+
+  const handleOnboardingSubmit = async () => {
+      if (!onboardingData.full_name || !onboardingData.age) {
+          toast.error("Please fill in all required fields");
+          return;
+      }
+      
+      setOnboardingLoading(true); 
+      try {
+          const token = localStorage.getItem('authToken');
+          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/patient/profile`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${publicAnonKey}`
+              },
+              body: JSON.stringify({
+                  authToken: token,
+                  full_name: onboardingData.full_name,
+                  age: onboardingData.age,
+                  gender: onboardingData.gender,
+                  email: onboardingData.email
+              })
+          });
+          
+          if (!response.ok) throw new Error('Failed to update profile');
+          
+          const data = await response.json();
+          
+          // Update local user
+          const updatedUser = { 
+              ...user, 
+              ...data.user, 
+              name: data.user.full_name || user.name 
+          };
+          
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          localStorage.removeItem('isNewUser');
+          setShowOnboarding(false);
+          toast.success("Profile updated successfully!");
+          
+      } catch (e) {
+          console.error(e);
+          toast.error("Failed to save profile");
+      } finally {
+          setOnboardingLoading(false);
+      }
+  };
+  
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -63,29 +143,51 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
     // 1. Fetch User Profile (Protected)
     async function fetchUser() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUser({
-            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Patient',
-            email: user.email,
-            avatar: user.user_metadata?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
-            ...user.user_metadata
-          });
-          
-          // Fetch appointments only if we have a session
-          let { data: { session } } = await supabase.auth.getSession();
-          
-          if (!session) {
-             const { data: { session: refreshed } } = await supabase.auth.refreshSession();
-             session = refreshed;
-          }
+        let user = null;
+        let token = null;
 
-          if (session) {
-             const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/appointments`, {
+        // Try Supabase Auth first
+        const { data: { user: sbUser } } = await supabase.auth.getUser();
+        
+        if (sbUser) {
+           user = {
+             name: sbUser.user_metadata?.full_name || sbUser.email?.split('@')[0] || 'Patient',
+             email: sbUser.email,
+             avatar: sbUser.user_metadata?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+             ...sbUser.user_metadata
+           };
+           const { data: { session } } = await supabase.auth.getSession();
+           token = session?.access_token;
+        } else {
+           // Fallback to custom auth
+           const storedUser = localStorage.getItem('user');
+           const storedToken = localStorage.getItem('authToken');
+           
+           if (storedUser && storedToken) {
+              try {
+                  const parsedUser = JSON.parse(storedUser);
+                  user = {
+                     name: parsedUser.mobile_number || parsedUser.name || 'Patient',
+                     email: parsedUser.email,
+                     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+                     ...parsedUser
+                  };
+                  token = storedToken;
+              } catch (e) {
+                  console.error('Failed to parse stored user:', e);
+              }
+           }
+        }
+
+        if (user) {
+          setUser(user);
+          
+          if (token) {
+             const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/appointments`, {
                 headers: { 
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${publicAnonKey}`,
-                    'X-Supabase-Auth': session.access_token
+                    'X-Supabase-Auth': token
                 }
              });
              if (response.ok) {
@@ -113,12 +215,19 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.access_token) {
                 token = session.access_token;
+            } else {
+                const storedToken = localStorage.getItem('authToken');
+                if (storedToken) token = storedToken;
             }
 
             // Fetch Hospitals
             try {
                 // Use publicAnonKey for public endpoints to avoid Gateway 401s with user tokens
-                const hRes = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospitals?t=${Date.now()}`, {
+                // But if we have a valid user token, sending it might be useful for some logic?
+                // Actually, for public data, AnonKey is safer/simpler unless personalization is needed.
+                // The original code used publicAnonKey explicitly for the fetch call, ignoring the `token` variable it computed above!
+                // I will stick to publicAnonKey for the Authorization header to ensure access.
+                const hRes = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospitals?t=${Date.now()}`, {
                     headers: { 'Authorization': `Bearer ${publicAnonKey}` },
                     cache: 'no-store'
                 });
@@ -135,7 +244,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
             // Fetch Doctors
             try {
                 // Use publicAnonKey for public endpoints to avoid Gateway 401s with user tokens
-                const dRes = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctors?t=${Date.now()}`, {
+                const dRes = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctors?t=${Date.now()}`, {
                     headers: { 'Authorization': `Bearer ${publicAnonKey}` },
                     cache: 'no-store'
                 });
@@ -199,6 +308,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
             </div>
 
             <div className="flex items-center gap-4">
+                <VoiceAssistant onNavigate={onNavigate} userName={user.name?.split(' ')[0]} />
                 <Button variant="ghost" size="icon" className="relative text-slate-500 hover:text-slate-900">
                     <Bell className="w-5 h-5" />
                     <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
@@ -385,7 +495,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                                         const token = publicAnonKey;
                                                         
                                                         // Fetch Doctors
-                                                        const dRes = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctors?t=${Date.now()}`, {
+                                                        const dRes = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctors?t=${Date.now()}`, {
                                                             headers: { 'Authorization': `Bearer ${token}` },
                                                             cache: 'no-store'
                                                         });
@@ -395,7 +505,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                                         }
                                                         
                                                         // Fetch Hospitals
-                                                        const hRes = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospitals?t=${Date.now()}`, {
+                                                        const hRes = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospitals?t=${Date.now()}`, {
                                                             headers: { 'Authorization': `Bearer ${token}` },
                                                             cache: 'no-store'
                                                         });
@@ -653,6 +763,82 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
             </div>
         </div>
       </motion.div>
+
+      {/* Onboarding Dialog */}
+      <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Complete Your Profile</DialogTitle>
+            <DialogDescription>
+              Please provide a few details to get the best care experience.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Full Name
+              </Label>
+              <Input
+                id="name"
+                value={onboardingData.full_name}
+                onChange={(e) => setOnboardingData({...onboardingData, full_name: e.target.value})}
+                className="col-span-3"
+                placeholder="John Doe"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="age" className="text-right">
+                Age
+              </Label>
+              <Input
+                id="age"
+                type="number"
+                value={onboardingData.age}
+                onChange={(e) => setOnboardingData({...onboardingData, age: e.target.value})}
+                className="col-span-3"
+                placeholder="25"
+              />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="gender" className="text-right">
+                Gender
+              </Label>
+              <div className="col-span-3 flex gap-2">
+                  {['Male', 'Female', 'Other'].map(g => (
+                      <Button 
+                        key={g} 
+                        type="button"
+                        variant={onboardingData.gender === g ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setOnboardingData({...onboardingData, gender: g})}
+                        className="flex-1"
+                      >
+                          {g}
+                      </Button>
+                  ))}
+              </div>
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={onboardingData.email}
+                onChange={(e) => setOnboardingData({...onboardingData, email: e.target.value})}
+                className="col-span-3"
+                placeholder="john@example.com (Optional)"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={handleOnboardingSubmit} disabled={onboardingLoading}>
+                {onboardingLoading ? 'Saving...' : 'Save Profile'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -64,14 +64,19 @@ export function PatientAppointments({ onNavigate }: PatientAppointmentsProps) {
         // Initial session check
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         
-        if (!initialSession) {
+        let token = initialSession?.access_token;
+        
+        if (!token) {
+           token = localStorage.getItem('authToken') || undefined;
+        }
+
+        if (!token) {
           console.log("No active session");
           setLoading(false);
           return;
         }
 
-        let token = initialSession.access_token;
-        const url = `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/appointments`;
+        const url = `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/appointments`;
 
         let response = await fetch(url, {
           headers: {

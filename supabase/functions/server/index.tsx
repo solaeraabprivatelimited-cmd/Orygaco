@@ -3,10 +3,12 @@ import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import * as kv from "./kv_store.tsx";
+import * as otpService from "./otp_service.ts";
+import * as authService from "./auth_service.ts";
 import { getAdvancedDashboardStats } from "./dashboard_metrics.ts";
 
 const app = new Hono();
-const BASE_PATH = "/make-server-44966e3b";
+const BASE_PATH = "/make-server-fd75a5db";
 
 // Enable logger
 app.use('*', logger(console.log));
@@ -151,6 +153,51 @@ async function checkPermission(user: any, permission: string) {
   return { allowed, role };
 }
 
+// --- CUSTOM AUTH (OTP) ---
+
+// Send OTP
+app.post(`${BASE_PATH}/auth/otp/send`, async (c) => {
+  try {
+    const body = await c.req.json();
+    if (!body || !body.mobile_number) {
+        return c.json({ error: "Mobile number is required" }, 400);
+    }
+    const result = await otpService.createOTP(body.mobile_number);
+    return c.json(result);
+  } catch (e: any) {
+    console.error("OTP Send Error:", e);
+    return c.json({ error: e.message || "Internal Server Error" }, 500);
+  }
+});
+
+// Verify OTP & Login
+app.post(`${BASE_PATH}/auth/otp/verify`, async (c) => {
+  try {
+    const body = await c.req.json();
+    const { mobile_number, otp } = body;
+    
+    if (!mobile_number || !otp) {
+        return c.json({ error: "Mobile number and OTP are required" }, 400);
+    }
+    
+    const verification = await otpService.verifyOTPCode(mobile_number, otp);
+    if (!verification.success) return c.json({ error: verification.error }, 400);
+
+    let user;
+    if (verification.isNewUser) {
+        user = await authService.createUser(mobile_number);
+    } else {
+        user = await kv.get(`user:mobile:${mobile_number}`);
+    }
+
+    const tokens = await authService.createAuthTokens(user);
+    return c.json({ session: tokens, user, isNewUser: verification.isNewUser });
+  } catch (e: any) {
+    console.error("OTP Verify Error:", e);
+    return c.json({ error: e.message || "Internal Server Error" }, 500);
+  }
+});
+
 // Signup Endpoint
 app.post(`${BASE_PATH}/signup`, async (c) => {
   const body = await c.req.json();
@@ -228,6 +275,36 @@ app.post(`${BASE_PATH}/signup`, async (c) => {
 
   if (error) return c.json({ error: error.message }, 400);
   return c.json(data);
+});
+
+// Update Patient Profile
+app.post(`${BASE_PATH}/patient/profile`, async (c) => {
+  const body = await c.req.json();
+  const { authToken, ...profileData } = body;
+  
+  const { user, error } = await getUser(c, authToken);
+  if (error) return c.json({ error }, 401);
+
+  // Try to find the raw user record
+  const rawUserKey = `user:id:${user.id}`;
+  const rawUser = await kv.get(rawUserKey) || {};
+  
+  const updatedUser = {
+      ...rawUser,
+      ...profileData,
+      id: user.id,
+      updated_at: new Date().toISOString()
+  };
+
+  // Save back to KV
+  await kv.set(rawUserKey, updatedUser);
+  
+  // If mobile exists, update that key too
+  if (updatedUser.mobile_number) {
+      await kv.set(`user:mobile:${updatedUser.mobile_number}`, updatedUser);
+  }
+
+  return c.json({ message: "Profile updated", user: updatedUser });
 });
 
 // --- ADMIN & SECURITY ENDPOINTS ---
@@ -981,11 +1058,38 @@ async function getUser(c, explicitToken = null) {
         return { user: null, error: "Invalid user token (Anonymous/Service key not allowed)" };
     }
 
+    // 5.5 Check Custom Auth Token (KV)
+    if (token.startsWith('access_')) {
+        const session = await kv.get(`auth:token:${token}`);
+        if (session && new Date(session.expires_at) > new Date()) {
+            const user = await kv.get(`user:id:${session.user_id}`);
+            if (user) {
+                const normalizedUser = {
+                    id: user.id,
+                    email: (user.mobile_number || 'user') + '@placeholder.com',
+                    user_metadata: {
+                        role: user.role,
+                        full_name: 'Patient ' + (user.mobile_number || ''),
+                        ...user
+                    },
+                    role: 'authenticated',
+                    aud: 'authenticated',
+                    created_at: user.created_at
+                };
+                return { user: normalizedUser, error: null };
+            }
+        }
+        return { user: null, error: "Invalid or expired custom token" };
+    }
+
     // 6. Verify with Supabase Auth
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
     
     if (error) {
-      console.error(`[Auth] Token Verification Failed: ${error.message}`);
+      // Suppress noisy logs for system keys that slip through (missing sub claim = anon key)
+      if (!error.message.includes("missing sub claim")) {
+        console.error(`[Auth] Token Verification Failed: ${error.message}`);
+      }
       return { user: null, error: "Invalid session" };
     }
     
@@ -4149,6 +4253,85 @@ app.post(`${BASE_PATH}/hospital/documents`, async (c) => {
     await logActivity(user.id, 'hospital', 'upload_document', newDoc.id, { type: document.type });
     
     return c.json(newDoc);
+});
+
+// --- ORYA (GUARDIAN NODE) SERVICE ---
+
+app.get(`${BASE_PATH}/orya/events`, async (c) => {
+  // 1. Feature Flag Check
+  const ENABLE_ORYA = Deno.env.get("ENABLE_ORYA") !== "false"; // Default true
+  if (!ENABLE_ORYA) {
+    return c.json({ active: false, events: [] });
+  }
+
+  // 2. Auth Check (Optional but recommended for personalization)
+  const authToken = c.req.query('authToken');
+  const { user } = await getUser(c, authToken);
+  
+  // 3. Parse Context
+  const context = c.req.query('context') || 'system'; // 'report', 'appointment', 'system', etc.
+  const role = user?.user_metadata?.role || 'guest';
+
+  // 4. Generate Events (Simulation Logic)
+  const events = [];
+
+  // SYSTEM CONTEXT
+  // Always check for system-wide alerts
+  // Example: Maintenance mode, new features
+  // events.push({
+  //   severity: 'info',
+  //   message_key: 'SYSTEM_NORMAL',
+  //   metadata: { version: '1.0.0' }
+  // });
+
+  // CONTEXT: REPORT (Lab Results)
+  if (context === 'report') {
+    // Simulate analyzing a report
+    // In a real system, this would query the specific report ID and check against reference ranges
+    const reportId = c.req.query('resourceId');
+    if (reportId) {
+       // Mock logic: 50% chance of "assist" for demo purposes if not specified
+       events.push({
+         id: crypto.randomUUID(),
+         severity: 'assist',
+         message_key: 'REPORT_ANALYSIS_AVAILABLE',
+         metadata: { action: 'view_breakdown' },
+         expires_at: new Date(Date.now() + 5 * 60000).toISOString()
+       });
+    }
+  }
+
+  // CONTEXT: APPOINTMENT (Booking Flow)
+  if (context === 'appointment') {
+     // If user is booking, offer help if they stall (simulated here as just available)
+     events.push({
+       id: crypto.randomUUID(),
+       severity: 'info',
+       message_key: 'SLOT_AVAILABILITY_CHECK',
+       metadata: { status: 'verified' },
+       expires_at: new Date(Date.now() + 1 * 60000).toISOString()
+     });
+  }
+
+  // CONTEXT: DASHBOARD (Doctor)
+  if (context === 'dashboard' && role === 'doctor') {
+      // Check for urgent items
+      // We can query the action items endpoint internally or just simulate
+      // Let's check for emergency slots or waiting patients
+      // Mock:
+      events.push({
+          id: crypto.randomUUID(),
+          severity: 'alert',
+          message_key: 'PATIENT_WAITING_LATE',
+          metadata: { count: 1 },
+          expires_at: new Date(Date.now() + 2 * 60000).toISOString()
+      });
+  }
+
+  return c.json({
+    active: true,
+    events
+  });
 });
 
 Deno.serve(app.fetch);

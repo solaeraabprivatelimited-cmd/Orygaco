@@ -60,13 +60,13 @@ export function BookDoctorPage({ onNavigate }: BookDoctorPageProps) {
         if (!projectId) return;
         
         // Fetch Doctors
-        const doctorsPromise = fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctors?t=${Date.now()}`, {
+        const doctorsPromise = fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctors?t=${Date.now()}`, {
             headers: { 'Authorization': `Bearer ${publicAnonKey}` },
             cache: 'no-store'
         });
 
         // Fetch Hospitals
-        const hospitalsPromise = fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospitals?t=${Date.now()}`, {
+        const hospitalsPromise = fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospitals?t=${Date.now()}`, {
             headers: { 'Authorization': `Bearer ${publicAnonKey}` },
             cache: 'no-store'
         });

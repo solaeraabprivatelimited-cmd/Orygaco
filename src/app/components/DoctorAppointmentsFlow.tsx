@@ -89,7 +89,7 @@ function DoctorNotes({ appointmentId }: { appointmentId: string }) {
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) return;
                 
-                const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/notes/${appointmentId}`, {
+                const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/notes/${appointmentId}`, {
                     headers: { 
                         'Authorization': `Bearer ${publicAnonKey}`,
                         'X-Supabase-Auth': session.access_token
@@ -113,7 +113,7 @@ function DoctorNotes({ appointmentId }: { appointmentId: string }) {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
-            await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/notes`, {
+            await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/notes`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -176,7 +176,7 @@ function FollowUpSection({ appointmentId }: { appointmentId: string }) {
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) return;
                 
-                const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/follow-up/${appointmentId}`, {
+                const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/follow-up/${appointmentId}`, {
                     headers: { 
                         'Authorization': `Bearer ${publicAnonKey}`,
                         'X-Supabase-Auth': session.access_token
@@ -202,7 +202,7 @@ function FollowUpSection({ appointmentId }: { appointmentId: string }) {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
-            await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/follow-up`, {
+            await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/follow-up`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -278,7 +278,7 @@ export function DoctorAppointmentsFlow({ onNavigate, onBack }: DoctorAppointment
       }
 
       // Use the enhanced endpoint
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/dashboard/today-schedule`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/dashboard/today-schedule`, {
         headers: {
           'Authorization': `Bearer ${publicAnonKey}`,
           'X-Supabase-Auth': session.access_token
@@ -291,7 +291,7 @@ export function DoctorAppointmentsFlow({ onNavigate, onBack }: DoctorAppointment
         setAppointments(Array.isArray(data) ? data : []);
       } else {
         // Fallback to basic list if enhanced fails
-        const fallback = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor-appointments`, {
+        const fallback = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor-appointments`, {
             headers: {
               'Authorization': `Bearer ${publicAnonKey}`,
               'X-Supabase-Auth': session.access_token
@@ -321,7 +321,7 @@ export function DoctorAppointmentsFlow({ onNavigate, onBack }: DoctorAppointment
 
       const loadingToast = toast.loading("Updating status...");
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/update-appointment-status`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/update-appointment-status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

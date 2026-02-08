@@ -80,9 +80,12 @@ export function BookingFlow({ onNavigate, onBack, bookingData }: BookingFlowProp
     setIsLoadingPatients(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      const customToken = localStorage.getItem('authToken');
+      const token = session?.access_token || customToken;
+      
+      if (!token) return;
 
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/patients?authToken=${session.access_token}`;
+      const url = `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/patients?authToken=${token}`;
       const response = await fetch(url, {
          headers: { 'Authorization': `Bearer ${publicAnonKey}` }
       });
@@ -102,6 +105,10 @@ export function BookingFlow({ onNavigate, onBack, bookingData }: BookingFlowProp
     setIsLoadingSlots(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      const customToken = localStorage.getItem('authToken');
+      
+      // Use token from session or custom auth
+      const token = session?.access_token || customToken;
       
       // Use publicAnonKey for Authorization header (to pass Gateway)
       // Pass User Token in X-Supabase-Auth (for Server)
@@ -109,15 +116,15 @@ export function BookingFlow({ onNavigate, onBack, bookingData }: BookingFlowProp
          'Authorization': `Bearer ${publicAnonKey}`
       };
       
-      if (session) {
-        headers['X-Supabase-Auth'] = session.access_token;
+      if (token) {
+        headers['X-Supabase-Auth'] = token;
       }
 
       // Determine target owner for slots (Hospital or Doctor)
-      let url = `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/slots?date=${date}`;
+      let url = `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/slots?date=${date}`;
       
-      if (session) {
-        url += `&authToken=${session.access_token}`;
+      if (token) {
+        url += `&authToken=${token}`;
       }
       
       const hospitalId = doctor.hospitalId || doctor.hospital_id;
@@ -193,12 +200,15 @@ export function BookingFlow({ onNavigate, onBack, bookingData }: BookingFlowProp
       setIsLoadingPatients(true);
       try {
           const { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
+          const customToken = localStorage.getItem('authToken');
+          const token = session?.access_token || customToken;
+
+          if (!token) {
              toast.error("Please sign in to add members");
              return;
           }
 
-          const url = `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/patients?authToken=${session.access_token}`;
+          const url = `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/patients?authToken=${token}`;
           const response = await fetch(url, {
              method: 'POST',
              headers: { 
@@ -252,12 +262,13 @@ export function BookingFlow({ onNavigate, onBack, bookingData }: BookingFlowProp
          session = refreshedSession;
       }
 
-      if (!session) {
+      const customToken = localStorage.getItem('authToken');
+      const accessToken = session?.access_token || customToken;
+
+      if (!accessToken) {
         toast.error('Please sign in to book an appointment');
         return false;
       }
-
-      const accessToken = session.access_token;
 
       const patient = familyMembers.find(m => m.id === selectedPatient);
       if (!patient) {
@@ -301,7 +312,7 @@ export function BookingFlow({ onNavigate, onBack, bookingData }: BookingFlowProp
       };
 
       // ✅ Step 3: Keep Authentication Consistent (URL + Header)
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/bookings?authToken=${accessToken}`;
+      const url = `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/bookings?authToken=${accessToken}`;
       
       // ✅ Step 2: Fix the Authorization Header - Dual Header Strategy
       const headers = {
@@ -323,7 +334,7 @@ export function BookingFlow({ onNavigate, onBack, bookingData }: BookingFlowProp
          
          if (refreshedSession && !refreshError) {
             const newAccessToken = refreshedSession.access_token;
-            const retryUrl = `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/bookings?authToken=${newAccessToken}`;
+            const retryUrl = `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/bookings?authToken=${newAccessToken}`;
             const retryHeaders = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${publicAnonKey}`,

@@ -36,10 +36,10 @@ export function BlogListPage({ onNavigate }: BlogListPageProps) {
         
         // Fetch both generic blogs and doctor-written blogs in parallel
         const [genericBlogsRes, doctorBlogsRes] = await Promise.all([
-          fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/blogs`, {
+          fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/blogs`, {
             headers: { 'Authorization': `Bearer ${publicAnonKey}` }
           }),
-          fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/public/doctor-blogs`, {
+          fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/public/doctor-blogs`, {
             headers: { 'Authorization': `Bearer ${publicAnonKey}` }
           })
         ]);

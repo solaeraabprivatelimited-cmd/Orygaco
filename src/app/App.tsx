@@ -35,6 +35,22 @@ import { VerificationBadge } from './components/ui/VerificationBadge';
 import logo from 'figma:asset/79875bb7427953c37958c445f51a4ce2f3d7aa79.png';
 
 import { SecurityProvider } from './contexts/SecurityContext';
+import { ORYAProvider, useORYA } from './contexts/ORYAContext';
+import { ORYAContainer } from './components/orya/ORYAContainer';
+
+// Helper to sync route state with Guardian Node
+function ORYARouteSync({ view, data }: { view: string, data?: any }) {
+  const { setContext } = useORYA();
+  useEffect(() => {
+    let context = 'system';
+    if (view === 'health-records' || view === 'patient-app') context = 'report';
+    if (view === 'booking' || view === 'book-doctor') context = 'appointment';
+    if (view === 'doctor-app' || view === 'doctor-dashboard') context = 'dashboard';
+    
+    setContext(context, data?.id);
+  }, [view, data, setContext]);
+  return null;
+}
 
 export default function App() {
   const [currentView, setCurrentView] = useState('home');
@@ -93,12 +109,27 @@ export default function App() {
         session = data.session;
       }
 
-      console.log('[App.tsx] Session check:', { hasSession: !!session, userId: session?.user?.id });
-      setIsAuthenticated(!!session);
+      // Check for custom auth token from OTP login
+      const customToken = localStorage.getItem('authToken');
+      const customUser = localStorage.getItem('user');
+
+      console.log('[App.tsx] Session check:', { hasSession: !!session, hasCustomToken: !!customToken, userId: session?.user?.id });
       
-      if (session?.user) {
+      if (session) {
+        setIsAuthenticated(true);
         const role = session.user.user_metadata?.role as any || 'patient';
         setUserRole(role);
+      } else if (customToken && customUser) {
+        setIsAuthenticated(true);
+        try {
+            const parsedUser = JSON.parse(customUser);
+            setUserRole(parsedUser.role || 'patient');
+        } catch (e) {
+            console.error('Error parsing custom user:', e);
+            setUserRole('patient');
+        }
+      } else {
+        setIsAuthenticated(false);
       }
     };
     
@@ -122,7 +153,7 @@ export default function App() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [currentView]);
 
   const isDoctorMode = userRole === 'doctor' || (currentView.startsWith('doctor-') && currentView !== 'doctor-detail') || currentView === 'doctor-app' || currentView.startsWith('auth-doctor');
 
@@ -166,6 +197,17 @@ export default function App() {
       root.style.setProperty('--accent-foreground', '#E63E6D');
     }
   }, [currentView]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('isNewUser');
+    setIsAuthenticated(false);
+    setUserRole('guest');
+    setCurrentView('home');
+    window.history.pushState({ view: 'home' }, '', '#home');
+  };
 
   const handleNavigate = (view: string, data?: any) => {
     // Detect if teleconsult is being accessed from doctor or patient context
@@ -296,6 +338,9 @@ export default function App() {
 
   return (
     <SecurityProvider>
+      <ORYAProvider>
+      <ORYARouteSync view={currentView} data={bookingData} />
+      <ORYAContainer />
       <div className="min-h-screen bg-background">
         {currentView !== 'emergency' && !currentView.startsWith('auth') && (
         <Navigation 
@@ -304,6 +349,7 @@ export default function App() {
           isDoctorMode={isDoctorMode} 
           userRole={userRole} 
           isAuthenticated={isAuthenticated}
+          onLogout={handleLogout}
         />
       )}
       {renderView()}
@@ -312,6 +358,7 @@ export default function App() {
        !['emergency', 'booking'].includes(currentView) && 
        <Footer onNavigate={handleNavigate} />}
       </div>
+      </ORYAProvider>
     </SecurityProvider>
   );
 }
@@ -325,7 +372,7 @@ function HospitalsPage({ onNavigate }: { onNavigate: (view: string) => void }) {
     async function loadHospitals() {
       try {
         if (!projectId) return;
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospitals`, {
+        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospitals`, {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`
           }
