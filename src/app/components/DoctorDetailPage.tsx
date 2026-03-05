@@ -4,22 +4,57 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { VerificationBadge } from './ui/VerificationBadge';
+import { useAppNavigate } from '../hooks/useAppNavigate';
+import { useParams, useLocation } from 'react-router';
+import { useState, useEffect } from 'react';
+import { projectId, publicAnonKey } from '/utils/supabase/info';
 
-interface DoctorDetailPageProps {
-  onNavigate: (view: string) => void;
-  doctor?: any;
-}
+export function DoctorDetailPage() {
+  const { navigate, goBack } = useAppNavigate();
+  const { id } = useParams();
+  const location = useLocation();
+  const [doctor, setDoctor] = useState<any>(location.state || null);
+  const [loading, setLoading] = useState(!doctor);
 
-export function DoctorDetailPage({ onNavigate, doctor }: DoctorDetailPageProps) {
-  // If no doctor passed, we might want to show a loading state or redirect. 
-  // For now, we'll render a "Not Found" state if doctor is missing to strictly avoid showing unrelated data.
+  // Fetch doctor by ID if not passed via navigation state
+  useEffect(() => {
+    if (doctor) return;
+    if (!id) { setLoading(false); return; }
+
+    async function fetchDoctor() {
+      try {
+        const res = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctors/${id}`,
+          { headers: { Authorization: `Bearer ${publicAnonKey}` } }
+        );
+        if (res.ok) {
+          const found = await res.json();
+          setDoctor(found);
+        }
+      } catch (e) {
+        console.error('Failed to fetch doctor:', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDoctor();
+  }, [id, doctor]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   if (!doctor) {
      return (
         <div className="min-h-screen py-8 bg-background flex items-center justify-center">
              <div className="text-center">
                  <h2 className="text-xl font-semibold mb-2">Doctor Not Found</h2>
                  <p className="text-muted-foreground mb-4">Please select a doctor from the list.</p>
-                 <Button onClick={() => onNavigate('book-doctor')}>Go to Search</Button>
+                 <Button onClick={() => navigate('book-doctor')}>Go to Search</Button>
              </div>
         </div>
      );
@@ -66,7 +101,7 @@ export function DoctorDetailPage({ onNavigate, doctor }: DoctorDetailPageProps) 
         <Button 
           variant="ghost" 
           className="mb-2 text-xs h-7"
-          onClick={() => onNavigate('book-doctor')}
+          onClick={goBack}
         >
           <ChevronLeft className="w-3 h-3 mr-1" />
           Back to Search
@@ -136,7 +171,7 @@ export function DoctorDetailPage({ onNavigate, doctor }: DoctorDetailPageProps) 
 
               {/* Action Buttons */}
               <div className="flex gap-1.5 mt-3 pt-3 border-t border-border">
-                <Button className="flex-1 text-xs h-8" onClick={() => onNavigate('booking', doctor)}>
+                <Button className="flex-1 text-xs h-8" onClick={() => navigate('booking', doctor)}>
                   <Calendar className="w-3 h-3 mr-1" />
                   Book
                 </Button>
@@ -308,7 +343,7 @@ export function DoctorDetailPage({ onNavigate, doctor }: DoctorDetailPageProps) 
               <div className="text-center">
                 <div className="text-xs text-muted-foreground mb-0.5">Consultation Fee</div>
                 <div className="text-2xl font-medium mb-2">₹{displayDoctor.consultationFee}</div>
-                <Button className="w-full text-xs h-8" onClick={() => onNavigate('booking', doctor)}>
+                <Button className="w-full text-xs h-8" onClick={() => navigate('booking', doctor)}>
                   Book Appointment
                 </Button>
               </div>

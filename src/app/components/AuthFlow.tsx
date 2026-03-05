@@ -12,19 +12,31 @@ import OrygaPNill from '../../imports/OrygaPNill-226-129';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
+import { useAppNavigate } from '../hooks/useAppNavigate';
+import { useAuth } from '../contexts/AuthContext';
+import { useLocation } from 'react-router';
 
 type AuthScreen = 'landing' | 'login' | 'signup' | 'otp' | 'forgot-password' | 'onboarding';
 type UserType = 'patient' | 'doctor' | 'hospital' | null;
 
-interface AuthFlowProps {
-  onNavigate: (view: string, userType?: string) => void;
-  initialUserType?: UserType;
-  initialScreen?: AuthScreen;
-}
-
-export function AuthFlow({ onNavigate, initialUserType = null, initialScreen = 'landing' }: AuthFlowProps) {
-  const [currentScreen, setCurrentScreen] = useState<AuthScreen>(initialScreen);
-  const [userType, setUserType] = useState<UserType>(initialUserType);
+export function AuthFlow() {
+  const { navigate } = useAppNavigate();
+  const { setUserRole } = useAuth();
+  const location = useLocation();
+  
+  // Derive initial user type and screen from URL path
+  const deriveInitial = (): { userType: UserType; screen: AuthScreen } => {
+    const path = location.pathname;
+    if (path.includes('/auth/doctor/signup')) return { userType: 'doctor', screen: 'signup' };
+    if (path.includes('/auth/doctor')) return { userType: 'doctor', screen: 'login' };
+    if (path.includes('/auth/hospital/signup')) return { userType: 'hospital', screen: 'signup' };
+    if (path.includes('/auth/hospital')) return { userType: 'hospital', screen: 'login' };
+    return { userType: null, screen: 'landing' };
+  };
+  
+  const initial = deriveInitial();
+  const [currentScreen, setCurrentScreen] = useState<AuthScreen>(initial.screen);
+  const [userType, setUserType] = useState<UserType>(initial.userType);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
@@ -118,7 +130,7 @@ export function AuthFlow({ onNavigate, initialUserType = null, initialScreen = '
             }
             
             toast.success("Logged in successfully");
-            onNavigate('patient-app'); 
+            navigate('patient-app'); 
         } else {
             toast.error(data.error || "Verification failed");
         }
@@ -224,17 +236,17 @@ export function AuthFlow({ onNavigate, initialUserType = null, initialScreen = '
       
       // Navigate based on role
       if (role === 'patient') {
-        onNavigate('patient-app');
+        navigate('patient-app');
       } else if (role === 'doctor') {
-        onNavigate('doctor-app');
+        navigate('doctor-app');
       } else if (role === 'hospital') {
-        onNavigate('hospital-admin');
+        navigate('hospital-admin');
       } else {
         // Fallback for unknown roles - default to home or show error
         console.warn('[AuthFlow] Unknown role:', role);
         toast.error(`Unknown user role: ${role}. Contact support.`);
         // Try navigating to home as fallback
-        onNavigate('home');
+        navigate('home');
       }
       
       console.log('[AuthFlow] Navigation command sent');
@@ -387,11 +399,11 @@ export function AuthFlow({ onNavigate, initialUserType = null, initialScreen = '
       
       // Determine next step based on user type
       if (userType === 'patient') {
-        onNavigate('patient-app');
+        navigate('patient-app');
       } else if (userType === 'doctor') {
-        onNavigate('doctor-app');
+        navigate('doctor-app');
       } else if (userType === 'hospital') {
-        onNavigate('hospital-admin');
+        navigate('hospital-admin');
       } else {
         // Fallback
         setCurrentScreen('onboarding');
@@ -420,11 +432,11 @@ export function AuthFlow({ onNavigate, initialUserType = null, initialScreen = '
 
   const handleOnboardingComplete = () => {
     if (userType === 'patient') {
-      onNavigate('patient-app');
+      navigate('patient-app');
     } else if (userType === 'doctor') {
-      onNavigate('doctor-app');
+      navigate('doctor-app');
     } else if (userType === 'hospital') {
-      onNavigate('hospital-admin');
+      navigate('hospital-admin');
     }
   };
 
@@ -437,7 +449,7 @@ export function AuthFlow({ onNavigate, initialUserType = null, initialScreen = '
       >
         <div className="max-w-5xl w-full">
           <button 
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('home')}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />

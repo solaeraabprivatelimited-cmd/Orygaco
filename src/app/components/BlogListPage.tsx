@@ -4,12 +4,10 @@ import { Search, Filter, BookOpen } from 'lucide-react';
 import { BlogCard, BlogPost } from './BlogCard';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { Button } from './ui/button';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface BlogListPageProps {
-  onNavigate: (view: string, data?: any) => void;
-}
-
-export function BlogListPage({ onNavigate }: BlogListPageProps) {
+export function BlogListPage() {
+  const { navigate } = useAppNavigate();
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -45,10 +43,19 @@ export function BlogListPage({ onNavigate }: BlogListPageProps) {
         ]);
         
         const genericBlogs = genericBlogsRes.ok ? await genericBlogsRes.json() : [];
-        const doctorBlogs = doctorBlogsRes.ok ? await doctorBlogsRes.json() : [];
+        const rawDoctorBlogs = doctorBlogsRes.ok ? await doctorBlogsRes.json() : [];
+        
+        // Normalize doctor blogs to match BlogPost shape (backward compat for older blogs without 'author')
+        const doctorBlogs = rawDoctorBlogs.map((blog: any) => ({
+          ...blog,
+          author: blog.author || (blog.doctorName ? `Dr. ${blog.doctorName}` : 'Doctor'),
+          coverImage: blog.coverImage || '',
+          targetAudience: blog.targetAudience || ['Everyone'],
+          publishedAt: blog.publishedAt || blog.updatedAt || blog.createdAt,
+        }));
         
         // Merge both types of blogs and sort by publishedAt/createdAt
-        const allBlogs = [...genericBlogs, ...doctorBlogs].sort((a, b) => {
+        const allBlogs = [...genericBlogs, ...doctorBlogs].sort((a: any, b: any) => {
           const dateA = new Date(a.publishedAt || a.createdAt).getTime();
           const dateB = new Date(b.publishedAt || b.createdAt).getTime();
           return dateB - dateA; // Newest first
@@ -183,7 +190,7 @@ export function BlogListPage({ onNavigate }: BlogListPageProps) {
               <BlogCard 
                 key={post.id} 
                 post={post} 
-                onClick={(p) => onNavigate('blog-detail', p)} 
+                onClick={(p) => navigate('blog-detail', p)} 
               />
             ))}
           </div>

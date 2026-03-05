@@ -3,12 +3,10 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
 import { cn } from './ui/utils';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface HospitalLandingPageProps {
-  onNavigate: (view: string) => void;
-}
-
-export function HospitalLandingPage({ onNavigate }: HospitalLandingPageProps) {
+export function HospitalLandingPage() {
+  const { navigate } = useAppNavigate();
   const features = [
     {
       icon: <LayoutDashboard className="w-6 h-6" />,
@@ -83,7 +81,7 @@ export function HospitalLandingPage({ onNavigate }: HospitalLandingPageProps) {
               <Button 
                 size="xl" 
                 className="h-14 px-8 text-lg rounded-full bg-emerald-600 text-white hover:bg-emerald-700 shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all hover:-translate-y-0.5"
-                onClick={() => onNavigate('auth-hospital')}
+                onClick={() => navigate('auth-hospital')}
               >
                 Login for Hospitals <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
@@ -91,7 +89,7 @@ export function HospitalLandingPage({ onNavigate }: HospitalLandingPageProps) {
                 size="xl" 
                 variant="outline"
                 className="h-14 px-8 text-lg rounded-full border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
-                onClick={() => onNavigate('about-us')}
+                onClick={() => navigate('about-us')}
               >
                 <Play className="w-4 h-4 mr-2 fill-current" /> Watch Demo
               </Button>
@@ -262,7 +260,7 @@ export function HospitalLandingPage({ onNavigate }: HospitalLandingPageProps) {
             <Button 
               size="xl"
               className="h-14 px-10 rounded-full bg-slate-900 text-white hover:bg-slate-800 text-lg shadow-xl hover:-translate-y-1 transition-all"
-              onClick={() => onNavigate('auth-hospital-signup')}
+              onClick={() => navigate('auth-hospital-signup')}
             >
               Request Demo
             </Button>
@@ -270,7 +268,7 @@ export function HospitalLandingPage({ onNavigate }: HospitalLandingPageProps) {
               size="xl"
               variant="outline"
               className="h-14 px-10 rounded-full border-slate-200 text-slate-600 hover:bg-slate-50 text-lg"
-              onClick={() => onNavigate('home')}
+              onClick={() => navigate('home')}
             >
               Return to Home
             </Button>

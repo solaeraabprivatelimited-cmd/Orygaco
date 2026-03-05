@@ -9,25 +9,14 @@ import { Switch } from './ui/switch';
 import { supabase } from '@/lib/supabase';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface DoctorScheduleProps {
-  onNavigate: (view: string) => void;
-  onBack: () => void;
+  // Props removed - using hooks now
 }
 
-const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-const mockSchedule = {
-  Monday: { enabled: true, slots: [{ start: '09:00', end: '13:00' }, { start: '14:00', end: '18:00' }] },
-  Tuesday: { enabled: true, slots: [{ start: '09:00', end: '13:00' }, { start: '14:00', end: '18:00' }] },
-  Wednesday: { enabled: true, slots: [{ start: '09:00', end: '13:00' }, { start: '14:00', end: '18:00' }] },
-  Thursday: { enabled: true, slots: [{ start: '09:00', end: '13:00' }, { start: '14:00', end: '18:00' }] },
-  Friday: { enabled: true, slots: [{ start: '09:00', end: '13:00' }, { start: '14:00', end: '18:00' }] },
-  Saturday: { enabled: true, slots: [{ start: '10:00', end: '14:00' }] },
-  Sunday: { enabled: false, slots: [] }
-};
-
-export function DoctorSchedule({ onNavigate, onBack }: DoctorScheduleProps) {
+export function DoctorSchedule() {
+  const { navigate, goBack } = useAppNavigate();
   const [schedule, setSchedule] = useState(mockSchedule);
   const [slotDuration, setSlotDuration] = useState('30');
   const [maxBookingsPerSlot, setMaxBookingsPerSlot] = useState('1');
@@ -170,7 +159,7 @@ export function DoctorSchedule({ onNavigate, onBack }: DoctorScheduleProps) {
                     Add Emergency Slot
                 </Button>
             )}
-            <Button variant="outline" onClick={onBack} className="flex-1 sm:flex-none">
+            <Button variant="outline" onClick={goBack} className="flex-1 sm:flex-none">
               Cancel
             </Button>
             <Button className="flex-1 sm:flex-none shadow-sm">

@@ -14,11 +14,10 @@ import { Textarea } from './ui/textarea';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Label } from './ui/label';
 import logo from 'figma:asset/79875bb7427953c37958c445f51a4ce2f3d7aa79.png';
+import { useAppNavigate } from '../hooks/useAppNavigate';
+import { useLocation } from 'react-router';
 
 interface BookingFlowProps {
-  onNavigate: (view: string) => void;
-  onBack: () => void;
-  bookingData?: any;
 }
 
 type BookingStep = 'datetime' | 'type' | 'token' | 'patient' | 'details' | 'review' | 'payment' | 'confirmed';
@@ -38,11 +37,13 @@ const defaultMockDoctor = {
 
 
 
-export function BookingFlow({ onNavigate, onBack, bookingData }: BookingFlowProps) {
+export function BookingFlow() {
+  const { navigate, goBack } = useAppNavigate();
+  const location = useLocation();
   const [familyMembers, setFamilyMembers] = useState<{ id: string; name: string; relation: string; age: string }[]>([]);
   
-  // Use bookingData if available, otherwise fallback
-  const doctor = bookingData || defaultMockDoctor;
+  // Use location state if available, otherwise fallback
+  const doctor = location.state || defaultMockDoctor;
 
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [newMember, setNewMember] = useState({ name: '', relation: '', age: '' });
@@ -406,7 +407,7 @@ export function BookingFlow({ onNavigate, onBack, bookingData }: BookingFlowProp
     if (currentStepIndex > 0) {
       setCurrentStep(steps[currentStepIndex - 1].id as BookingStep);
     } else {
-      onBack();
+      goBack();
     }
   };
 
@@ -510,7 +511,7 @@ export function BookingFlow({ onNavigate, onBack, bookingData }: BookingFlowProp
               <Button 
                 size="lg" 
                 className="w-full shadow-lg shadow-primary/20"
-                onClick={() => onNavigate('patient-app')}
+                onClick={() => navigate('patient-app')}
               >
                 <Calendar className="w-5 h-5 mr-2" />
                 View in My Appointments
@@ -529,7 +530,7 @@ export function BookingFlow({ onNavigate, onBack, bookingData }: BookingFlowProp
                   size="lg" 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => onNavigate('home')}
+                  onClick={() => navigate('home')}
                 >
                   Back to Home
                 </Button>

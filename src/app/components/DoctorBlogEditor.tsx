@@ -66,7 +66,7 @@ export function DoctorBlogEditor({ onBack, blogId }: DoctorBlogEditorProps) {
       if (!session) return;
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/blogs/${blogId}`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/blogs/${blogId}`,
         {
           headers: {
             'Authorization': `Bearer ${session.access_token}`
@@ -152,7 +152,7 @@ export function DoctorBlogEditor({ onBack, blogId }: DoctorBlogEditorProps) {
       });
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/blogs`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/blogs`,
         {
           method: 'POST',
           headers: {
@@ -218,7 +218,7 @@ export function DoctorBlogEditor({ onBack, blogId }: DoctorBlogEditorProps) {
       });
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/blogs`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/blogs`,
         {
           method: 'POST',
           headers: {

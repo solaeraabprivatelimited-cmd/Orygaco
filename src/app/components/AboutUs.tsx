@@ -2,12 +2,10 @@ import { Heart, Users, Building2, Award, Shield, Target, Zap, Globe, CheckCircle
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface AboutUsProps {
-  onNavigate: (view: string) => void;
-}
-
-export function AboutUs({ onNavigate }: AboutUsProps) {
+export function AboutUs() {
+  const { navigate } = useAppNavigate();
   const values = [
     {
       icon: <Heart className="w-6 h-6" />,
@@ -94,7 +92,7 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button 
-                onClick={() => onNavigate('book-doctor')}
+                onClick={() => navigate('book-doctor')}
                 className="bg-primary text-white hover:bg-primary/90"
               >
                 Book a Consultation
@@ -102,7 +100,7 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
               </Button>
               <Button 
                 variant="outline"
-                onClick={() => onNavigate('features')}
+                onClick={() => navigate('features')}
               >
                 Explore Features
               </Button>
@@ -249,20 +247,20 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Button 
-              onClick={() => onNavigate('book-doctor')}
+              onClick={() => navigate('book-doctor')}
               className="bg-primary text-white hover:bg-primary/90"
             >
               Book Your First Appointment
             </Button>
             <Button 
               variant="outline"
-              onClick={() => onNavigate('doctor-app')}
+              onClick={() => navigate('doctor-app')}
             >
               Join as Doctor
             </Button>
             <Button 
               variant="outline"
-              onClick={() => onNavigate('hospital-admin')}
+              onClick={() => navigate('hospital-admin')}
             >
               Partner as Hospital
             </Button>

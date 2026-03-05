@@ -7,41 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { supabase } from '@/lib/supabase';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface DoctorEarningsProps {
-  onNavigate: (view: string) => void;
-  onBack: () => void;
 }
 
-// Mock Data remains as base
-const mockTransactions = [
-  { id: 1, date: "2024-12-25", patient: "Arjun Mehta", type: "Video Consultation", amount: 800, status: "completed", eta: "Settled" },
-  { id: 2, date: "2024-12-25", patient: "Priya Sharma", type: "In-person Visit", amount: 800, status: "completed", eta: "Settled" },
-  { id: 3, date: "2024-12-24", patient: "Rahul Singh", type: "Video Consultation", amount: 800, status: "completed", eta: "Settled" },
-  { id: 7, date: "2024-12-22", patient: "Karan Desai", type: "Video Consultation", amount: 800, status: "pending", eta: "Est. Dec 28" },
-  { id: 8, date: "2024-12-22", patient: "Ananya Iyer", type: "In-person Visit", amount: 800, status: "pending", eta: "Est. Dec 29" }
-];
-
-const mockPayouts = [
-  { id: 1, date: "2024-12-20", amount: 15600, status: "completed", method: "Bank Transfer", reference: "TXN123456789" },
-  { id: 2, date: "2024-12-10", amount: 18400, status: "completed", method: "Bank Transfer", reference: "TXN123456788" }
-];
-
-const monthlyEarnings = [
-  { month: "Dec 2024", earnings: 45000, consultations: 56 },
-  { month: "Nov 2024", earnings: 52000, consultations: 65 },
-  { month: "Oct 2024", earnings: 48000, consultations: 60 }
-];
-
-export function DoctorEarnings({ onNavigate, onBack }: DoctorEarningsProps) {
+export function DoctorEarnings() {
+  const { navigate, goBack } = useAppNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [summary, setSummary] = useState<any>(null);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -132,7 +104,7 @@ export function DoctorEarnings({ onNavigate, onBack }: DoctorEarningsProps) {
             <h1 className="text-3xl mb-1">Earnings & Payouts</h1>
             <p className="text-muted-foreground">Track your income and manage withdrawals</p>
           </div>
-          <Button variant="outline" onClick={onBack}>
+          <Button variant="outline" onClick={goBack}>
             <ChevronLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>

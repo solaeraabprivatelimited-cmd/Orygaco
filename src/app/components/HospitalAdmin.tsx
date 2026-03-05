@@ -19,16 +19,17 @@ import { cn } from "./ui/utils";
 import { Calendar as CalendarComponent } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { useAppNavigate } from '../hooks/useAppNavigate';
+import { useAuth } from '../contexts/AuthContext';
 
 const HospitalProfileSettings = lazy(() => import('./hospital/HospitalProfileSettings').then(module => ({ default: module.HospitalProfileSettings })));
 
 interface HospitalAdminProps {
-  onNavigate: (view: string) => void;
-  isAuthenticated: boolean;
-  userRole: 'guest' | 'patient' | 'doctor' | 'hospital';
 }
 
-export function HospitalAdmin({ onNavigate, isAuthenticated, userRole }: HospitalAdminProps) {
+export function HospitalAdmin() {
+  const { navigate } = useAppNavigate();
+  const { isAuthenticated, userRole } = useAuth();
   const { checkPermission, isVerified, role } = useSecurity();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('schedule');
@@ -1063,7 +1064,7 @@ export function HospitalAdmin({ onNavigate, isAuthenticated, userRole }: Hospita
             Unable to verify session. Please sign in again.
           </p>
           <div className="space-y-3">
-             <Button onClick={() => onNavigate('auth-hospital')} className="w-full">
+             <Button onClick={() => navigate('auth-hospital')} className="w-full">
                 Sign In
              </Button>
              <Button variant="outline" onClick={() => window.location.reload()} className="w-full">

@@ -4,12 +4,10 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
 import doctorHeroImage from 'figma:asset/41a844b33bd9b451dfff73880eb0e6924dbe37b0.png';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface HomePageProps {
-  onNavigate: (view: string) => void;
-}
-
-export function HomePage({ onNavigate }: HomePageProps) {
+export function HomePage() {
+  const { navigate } = useAppNavigate();
   const features = [
     {
       icon: <Search className="w-6 h-6" />,
@@ -157,7 +155,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 <Button 
                   size="xl" 
                   className="h-14 px-8 rounded-full text-base font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 bg-[rgb(229,40,94)] hover:bg-rose-700 transition-all hover:scale-105 active:scale-95"
-                  onClick={() => onNavigate('book-doctor')}
+                  onClick={() => navigate('book-doctor')}
                 >
                   Find a Doctor
                 </Button>
@@ -165,7 +163,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                   size="xl" 
                   variant="outline"
                   className="h-14 px-8 rounded-full text-base font-semibold border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all bg-[rgba(250,250,250,0)]"
-                  onClick={() => onNavigate('auth')}
+                  onClick={() => navigate('auth')}
                 >
                   Login
                 </Button>
@@ -297,7 +295,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                      whileHover={{ scale: 1.02 }}
                      whileTap={{ scale: 0.98 }}
                      className="w-full py-3 bg-white text-slate-900 rounded-xl font-semibold text-sm shadow-lg hover:bg-primary hover:text-white transition-colors"
-                     onClick={() => onNavigate('book-doctor')}
+                     onClick={() => navigate('book-doctor')}
                    >
                      Book Appointment
                    </motion.button>
@@ -697,7 +695,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
               <Button 
                 size="xl" 
                 className="text-lg h-14 px-8 shadow-xl shadow-primary/25 rounded-full"
-                onClick={() => onNavigate('book-doctor')}
+                onClick={() => navigate('book-doctor')}
               >
                 Get Started Now
                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -706,7 +704,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 size="xl" 
                 variant="outline"
                 className="text-lg h-14 px-8 rounded-full border-2"
-                onClick={() => onNavigate('features')}
+                onClick={() => navigate('features')}
               >
                 Learn More
               </Button>

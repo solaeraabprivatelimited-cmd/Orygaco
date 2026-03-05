@@ -5,183 +5,13 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface HealthRecordsPageProps {
-  onNavigate: (view: string) => void;
-  onBack: () => void;
 }
 
-type ViewMode = 'list' | 'detail';
-type RecordType = 'prescription' | 'lab-report' | 'consultation' | 'vaccination' | 'imaging';
-
-interface HealthRecord {
-  id: number;
-  type: RecordType;
-  title: string;
-  date: string;
-  doctor: string;
-  hospital: string;
-  details?: any;
-}
-
-const mockRecords: HealthRecord[] = [
-  {
-    id: 1,
-    type: 'prescription',
-    title: 'Cardiac Medication',
-    date: '2024-12-20',
-    doctor: 'Dr. Priya Sharma',
-    hospital: 'Apollo Hospitals, Indore',
-    details: {
-      diagnosis: 'Hypertension Management',
-      medications: [
-        { name: 'Metoprolol', dosage: '50mg', frequency: 'Once daily', duration: '30 days', instructions: 'Take in the morning with food' },
-        { name: 'Aspirin', dosage: '75mg', frequency: 'Once daily', duration: '30 days', instructions: 'Take after dinner' },
-        { name: 'Atorvastatin', dosage: '20mg', frequency: 'Once daily', duration: '30 days', instructions: 'Take at bedtime' }
-      ],
-      symptoms: 'Elevated blood pressure, occasional headaches',
-      followUp: 'Review in 2 weeks',
-      notes: 'Monitor blood pressure daily. Maintain low-salt diet.'
-    }
-  },
-  {
-    id: 2,
-    type: 'lab-report',
-    title: 'Complete Blood Count (CBC)',
-    date: '2024-12-18',
-    doctor: 'Dr. Rajesh Kumar',
-    hospital: 'Max Healthcare, Indore',
-    details: {
-      testName: 'Complete Blood Count',
-      reportId: 'LAB-2024-1218-001',
-      tests: [
-        { parameter: 'Hemoglobin', value: '14.2', unit: 'g/dL', range: '13.0-17.0', status: 'normal' },
-        { parameter: 'WBC Count', value: '7,800', unit: '/μL', range: '4,000-11,000', status: 'normal' },
-        { parameter: 'RBC Count', value: '5.1', unit: 'million/μL', range: '4.5-5.9', status: 'normal' },
-        { parameter: 'Platelets', value: '245,000', unit: '/μL', range: '150,000-400,000', status: 'normal' },
-        { parameter: 'ESR', value: '8', unit: 'mm/hr', range: '0-20', status: 'normal' }
-      ],
-      summary: 'All parameters within normal limits',
-      verifiedBy: 'Dr. Meera Iyer (Pathologist)'
-    }
-  },
-  {
-    id: 3,
-    type: 'consultation',
-    title: 'Cardiology Consultation',
-    date: '2024-12-15',
-    doctor: 'Dr. Priya Sharma',
-    hospital: 'Apollo Hospitals, Indore',
-    details: {
-      chiefComplaint: 'Chest pain and breathlessness',
-      vitals: {
-        bp: '142/88 mmHg',
-        pulse: '82 bpm',
-        temp: '98.2°F',
-        spo2: '97%',
-        weight: '78 kg',
-        height: '175 cm'
-      },
-      examination: 'Cardiovascular examination revealed regular rhythm, no murmurs. Respiratory system normal.',
-      diagnosis: 'Hypertension (Stage 1), Anxiety-related chest discomfort',
-      treatment: 'Started on antihypertensive medication. Advised lifestyle modifications.',
-      advice: 'Low-salt diet, regular exercise (30 min walking daily), stress management, avoid smoking and alcohol'
-    }
-  },
-  {
-    id: 4,
-    type: 'lab-report',
-    title: 'Lipid Profile',
-    date: '2024-12-10',
-    doctor: 'Dr. Priya Sharma',
-    hospital: 'Apollo Hospitals, Indore',
-    details: {
-      testName: 'Lipid Profile',
-      reportId: 'LAB-2024-1210-089',
-      tests: [
-        { parameter: 'Total Cholesterol', value: '198', unit: 'mg/dL', range: '<200', status: 'normal' },
-        { parameter: 'LDL Cholesterol', value: '118', unit: 'mg/dL', range: '<100', status: 'borderline' },
-        { parameter: 'HDL Cholesterol', value: '52', unit: 'mg/dL', range: '>40', status: 'normal' },
-        { parameter: 'Triglycerides', value: '145', unit: 'mg/dL', range: '<150', status: 'normal' },
-        { parameter: 'VLDL Cholesterol', value: '29', unit: 'mg/dL', range: '<30', status: 'normal' }
-      ],
-      summary: 'LDL slightly elevated. Recommend dietary modification and statin therapy.',
-      verifiedBy: 'Dr. Arun Patel (Pathologist)'
-    }
-  },
-  {
-    id: 5,
-    type: 'vaccination',
-    title: 'COVID-19 Booster Dose',
-    date: '2024-11-05',
-    doctor: 'Dr. Amit Verma',
-    hospital: 'Government Hospital, Indore',
-    details: {
-      vaccineName: 'Covishield (Booster)',
-      batchNo: 'CVD-2024-B-4532',
-      manufacturer: 'Serum Institute of India',
-      site: 'Left upper arm',
-      nextDose: 'Not required',
-      sideEffects: 'Mild pain at injection site (resolved in 24 hours)',
-      certificateNo: 'IN-MP-2024-11-001234'
-    }
-  },
-  {
-    id: 6,
-    type: 'imaging',
-    title: 'Chest X-Ray',
-    date: '2024-12-15',
-    doctor: 'Dr. Priya Sharma',
-    hospital: 'Apollo Hospitals, Indore',
-    details: {
-      studyType: 'Chest X-Ray PA View',
-      reportId: 'RAD-2024-1215-067',
-      indication: 'Chest pain evaluation',
-      findings: 'Heart size normal. Lung fields clear. No active pulmonary pathology. No pleural effusion. Bony structures normal.',
-      impression: 'Normal chest X-ray',
-      radiologist: 'Dr. Sneha Desai (MD Radiology)'
-    }
-  },
-  {
-    id: 7,
-    type: 'prescription',
-    title: 'Antibiotic Course',
-    date: '2024-11-28',
-    doctor: 'Dr. Karan Malhotra',
-    hospital: 'Medanta Hospital, Indore',
-    details: {
-      diagnosis: 'Upper Respiratory Tract Infection',
-      medications: [
-        { name: 'Azithromycin', dosage: '500mg', frequency: 'Once daily', duration: '5 days', instructions: 'Take 1 hour before food' },
-        { name: 'Paracetamol', dosage: '650mg', frequency: 'Three times daily', duration: '5 days', instructions: 'Take after meals if fever persists' },
-        { name: 'Cetirizine', dosage: '10mg', frequency: 'Once daily at bedtime', duration: '7 days', instructions: 'For allergic symptoms' }
-      ],
-      symptoms: 'Fever, sore throat, nasal congestion',
-      followUp: 'If symptoms persist beyond 5 days',
-      notes: 'Complete the full antibiotic course. Stay hydrated. Rest adequately.'
-    }
-  },
-  {
-    id: 8,
-    type: 'lab-report',
-    title: 'HbA1c Test',
-    date: '2024-11-20',
-    doctor: 'Dr. Priya Sharma',
-    hospital: 'Apollo Hospitals, Indore',
-    details: {
-      testName: 'Glycated Hemoglobin (HbA1c)',
-      reportId: 'LAB-2024-1120-234',
-      tests: [
-        { parameter: 'HbA1c', value: '5.4', unit: '%', range: '<5.7', status: 'normal' },
-        { parameter: 'Estimated Average Glucose', value: '108', unit: 'mg/dL', range: '<117', status: 'normal' }
-      ],
-      summary: 'No diabetes. Maintain healthy lifestyle.',
-      verifiedBy: 'Dr. Priya Menon (Pathologist)'
-    }
-  }
-];
-
-export function HealthRecordsPage({ onNavigate, onBack }: HealthRecordsPageProps) {
+export function HealthRecordsPage() {
+  const { navigate, goBack } = useAppNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedRecord, setSelectedRecord] = useState<HealthRecord | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -529,7 +359,7 @@ export function HealthRecordsPage({ onNavigate, onBack }: HealthRecordsPageProps
             <p className="text-muted-foreground">Access your complete medical history</p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Button variant="outline" onClick={onBack} className="flex-1 sm:flex-none">
+            <Button variant="outline" onClick={goBack} className="flex-1 sm:flex-none">
               <ChevronLeft className="w-4 h-4 mr-2" />
               Back
             </Button>

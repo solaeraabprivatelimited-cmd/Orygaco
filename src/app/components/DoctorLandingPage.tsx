@@ -3,12 +3,10 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
 import { cn } from './ui/utils';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface DoctorLandingPageProps {
-  onNavigate: (view: string) => void;
-}
-
-export function DoctorLandingPage({ onNavigate }: DoctorLandingPageProps) {
+export function DoctorLandingPage() {
+  const { navigate } = useAppNavigate();
   const features = [
     {
       icon: <Zap className="w-6 h-6" />,
@@ -83,7 +81,7 @@ export function DoctorLandingPage({ onNavigate }: DoctorLandingPageProps) {
               <Button 
                 size="xl" 
                 className="h-14 px-8 text-lg rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5"
-                onClick={() => onNavigate('auth-doctor')}
+                onClick={() => navigate('auth-doctor')}
               >
                 Login as Doctor<ArrowRight className="ml-2 w-5 h-5" />
               </Button>
@@ -91,7 +89,7 @@ export function DoctorLandingPage({ onNavigate }: DoctorLandingPageProps) {
                 size="xl" 
                 variant="outline"
                 className="h-14 px-8 text-lg rounded-full border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
-                onClick={() => onNavigate('about-us')}
+                onClick={() => navigate('about-us')}
               >
                 <Play className="w-4 h-4 mr-2 fill-current" /> Watch Demo
               </Button>
@@ -271,7 +269,7 @@ export function DoctorLandingPage({ onNavigate }: DoctorLandingPageProps) {
             <Button 
               size="xl"
               className="h-14 px-10 rounded-full bg-slate-900 text-white hover:bg-slate-800 text-lg shadow-xl hover:-translate-y-1 transition-all"
-              onClick={() => onNavigate('auth-doctor-signup')}
+              onClick={() => navigate('auth-doctor-signup')}
             >
               Start Free Trial
             </Button>
@@ -279,7 +277,7 @@ export function DoctorLandingPage({ onNavigate }: DoctorLandingPageProps) {
               size="xl"
               variant="outline"
               className="h-14 px-10 rounded-full border-slate-200 text-slate-600 hover:bg-slate-50 text-lg"
-              onClick={() => onNavigate('home')}
+              onClick={() => navigate('home')}
             >
               Go to Patient Site
             </Button>

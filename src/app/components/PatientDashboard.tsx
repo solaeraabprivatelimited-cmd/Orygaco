@@ -1,4 +1,3 @@
-
 import { Calendar, Activity, FileText, Users, Video, Clock, Heart, Shield, AlertCircle, Plus, Search, ChevronRight, Bell, Menu, X, Pill, Stethoscope, MapPin, Star, Building } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
@@ -22,22 +21,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface PatientDashboardProps {
-  onNavigate: (view: string) => void;
-}
-
-const data = [
-  { name: 'Mon', bpm: 0 },
-  { name: 'Tue', bpm: 0 },
-  { name: 'Wed', bpm: 0 },
-  { name: 'Thu', bpm: 0 },
-  { name: 'Fri', bpm: 0 },
-  { name: 'Sat', bpm: 0 },
-  { name: 'Sun', bpm: 0 },
-];
-
-export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
+export function PatientDashboard() {
+  const { navigate } = useAppNavigate();
   const [user, setUser] = useState<any>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [hospitals, setHospitals] = useState<any[]>([]);
@@ -288,7 +275,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
         <p>Please sign in to view your dashboard</p>
-        <Button onClick={() => onNavigate('auth')}>Sign In</Button>
+        <Button onClick={() => navigate('auth')}>Sign In</Button>
       </div>
     );
   }
@@ -308,14 +295,14 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
             </div>
 
             <div className="flex items-center gap-4">
-                <VoiceAssistant onNavigate={onNavigate} userName={user.name?.split(' ')[0]} />
+                <VoiceAssistant userName={user.name?.split(' ')[0]} />
                 <Button variant="ghost" size="icon" className="relative text-slate-500 hover:text-slate-900">
                     <Bell className="w-5 h-5" />
                     <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
                 </Button>
                 <div 
                     className="flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => onNavigate('patient-profile')}
+                    onClick={() => navigate('patient-profile')}
                 >
                     <div className="text-right hidden sm:block">
                         <div className="text-sm font-medium text-slate-900">{user.name}</div>
@@ -347,7 +334,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                 </p>
             </div>
             <div className="flex gap-3">
-                <Button onClick={() => onNavigate('book-doctor')} className="shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 rounded-full px-6">
+                <Button onClick={() => navigate('book-doctor')} className="shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 rounded-full px-6">
                     <Plus className="w-4 h-4 mr-2" /> Book Appointment
                 </Button>
             </div>
@@ -468,7 +455,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                 </button>
                             </div>
                         </div>
-                        <Button variant="link" className="text-primary" onClick={() => onNavigate(careView === 'doctors' ? 'book-doctor' : 'hospitals')}>See all</Button>
+                        <Button variant="link" className="text-primary" onClick={() => navigate(careView === 'doctors' ? 'book-doctor' : 'hospitals')}>See all</Button>
                     </div>
                     
                     <ScrollArea className="w-full whitespace-nowrap pb-4">
@@ -537,7 +524,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                         <Card 
                                             key={doctor.id} 
                                             className="w-[280px] p-0 border-none shadow-sm hover:shadow-lg transition-shadow bg-white overflow-hidden cursor-pointer shrink-0 whitespace-normal"
-                                            onClick={() => onNavigate('doctor-detail', doctor)}
+                                            onClick={() => navigate('doctor-detail', doctor)}
                                         >
                                             <div className="h-32 overflow-hidden relative bg-slate-100 flex items-center justify-center">
                                                 {doctor.image ? (
@@ -569,7 +556,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                                         className="flex-1 text-xs h-8 border-slate-200"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            onNavigate('doctor-detail', doctor);
+                                                            navigate('doctor-detail', doctor);
                                                         }}
                                                     >
                                                         Profile
@@ -579,7 +566,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                                         className="flex-1 text-xs h-8 bg-primary hover:bg-primary/90"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            onNavigate('booking', doctor);
+                                                            navigate('booking', doctor);
                                                         }}
                                                     >
                                                         Book
@@ -611,7 +598,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                         <Card 
                                             key={hospital.id} 
                                             className="w-[280px] p-0 border-none shadow-sm hover:shadow-lg transition-shadow bg-white overflow-hidden cursor-pointer shrink-0 whitespace-normal"
-                                            onClick={() => onNavigate('hospital-detail', hospital)}
+                                            onClick={() => navigate('hospital-detail', hospital)}
                                         >
                                             <div className="h-32 overflow-hidden relative bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
                                                 <Building className="w-10 h-10 text-indigo-300" />
@@ -635,7 +622,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                                         className="flex-1 text-xs h-8 border-slate-200"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            onNavigate('hospital-detail', hospital);
+                                                            navigate('hospital-detail', hospital);
                                                         }}
                                                     >
                                                         Details
@@ -645,7 +632,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                                         className="flex-1 text-xs h-8 bg-indigo-600 hover:bg-indigo-700 text-white" 
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            onNavigate('hospital-detail', hospital);
+                                                            navigate('hospital-detail', hospital);
                                                         }}
                                                     >
                                                         View Doctors
@@ -678,7 +665,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                 size="sm" 
                                 variant="ghost" 
                                 className="text-white hover:text-white hover:bg-white/10 h-8 px-2 text-xs" 
-                                onClick={() => onNavigate('patient-appointments')}
+                                onClick={() => navigate('patient-appointments')}
                              >
                                 View All
                              </Button>
@@ -716,7 +703,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                  ))}
                                </div>
                              )}
-                             <Button variant="outline" className="w-full mt-2 text-xs border-dashed border-slate-300 text-slate-500 hover:text-primary hover:border-primary hover:bg-primary/5" onClick={() => onNavigate('book-doctor')}>
+                             <Button variant="outline" className="w-full mt-2 text-xs border-dashed border-slate-300 text-slate-500 hover:text-primary hover:border-primary hover:bg-primary/5" onClick={() => navigate('book-doctor')}>
                                 <Plus className="w-3 h-3 mr-1" /> Schedule New
                             </Button>
                         </div>
@@ -751,7 +738,7 @@ export function PatientDashboard({ onNavigate }: PatientDashboardProps) {
                                     size="sm" 
                                     variant="destructive" 
                                     className="w-full bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200"
-                                    onClick={() => onNavigate('emergency')}
+                                    onClick={() => navigate('emergency')}
                                 >
                                     Call Ambulance
                                 </Button>

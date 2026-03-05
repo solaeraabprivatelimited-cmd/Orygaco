@@ -1,30 +1,28 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router';
 import { Menu, X, AlertCircle, LayoutDashboard, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { useAppNavigate, pathToView } from '../hooks/useAppNavigate';
 import OrygaPNill from '../../imports/OrygaPNill';
 import OrygaDNill from '../../imports/OrygaDNill-124-78';
-import logo from 'figma:asset/79875bb7427953c37958c445f51a4ce2f3d7aa79.png';
 import doctorLogo from 'figma:asset/012bc52855fab966b16a213602983ec5567509b5.png';
 
 interface NavigationProps {
-  currentView: string;
-  onNavigate: (view: string) => void;
   isDoctorMode?: boolean;
-  userRole?: 'guest' | 'patient' | 'doctor' | 'hospital';
-  isAuthenticated?: boolean;
-  onLogout?: () => void;
 }
 
-export function Navigation({ currentView, onNavigate, isDoctorMode = false, userRole = 'guest', isAuthenticated = false, onLogout }: NavigationProps) {
+export function Navigation({ isDoctorMode = false }: NavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const currentLogo = isDoctorMode ? doctorLogo : logo;
-  
+  const { navigate } = useAppNavigate();
+  const { isAuthenticated, userRole, logout } = useAuth();
+  const location = useLocation();
+  const currentView = pathToView(location.pathname);
+
   const isPatient = userRole === 'patient';
   const isDoctor = userRole === 'doctor';
   const isHospital = userRole === 'hospital';
-  
-  // Robust check: Trust isAuthenticated from parent if provided, otherwise fall back to role check
+
   const isLoggedIn = isAuthenticated || (isPatient || isDoctor || isHospital);
 
   const getDashboardView = () => {
@@ -33,9 +31,12 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
     return 'patient-app';
   };
 
-  // Define public views where we show public nav links and hide dashboard controls
-  const publicViews = ['home', 'features', 'blogs', 'blog-detail', 'about-us', 'doctor-landing', 'hospital-landing', 'hospitals', 'doctor-detail', 'hospital-detail', 'auth', 'auth-doctor', 'auth-hospital'];
-  const isPublicView = publicViews.includes(currentView);
+  const publicPaths = ['/', '/about', '/features', '/blogs', '/contact', '/find-doctors', '/for-doctors', '/for-hospitals', '/hospitals', '/emergency'];
+  const isPublicView = publicPaths.includes(location.pathname) ||
+    location.pathname.startsWith('/blogs/') ||
+    location.pathname.startsWith('/doctors/') ||
+    location.pathname.startsWith('/hospitals/') ||
+    location.pathname.startsWith('/auth');
 
   let navLinks = [
     { id: isLoggedIn ? getDashboardView() : 'home', label: isLoggedIn ? 'Dashboard' : 'Home' },
@@ -68,14 +69,12 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
   }
 
   const handleLogout = async () => {
-    if (onLogout) {
-        await onLogout();
-    } else {
-        await supabase.auth.signOut();
-        onNavigate('home');
-    }
+    await logout();
+    navigate('home');
     setMobileMenuOpen(false);
   };
+
+  const isActive = (id: string) => currentView === id;
 
   return (
     <nav className="border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -83,8 +82,8 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
         <div className="h-20 flex lg:grid lg:grid-cols-[1fr_auto_1fr] items-center justify-between gap-4">
           {/* Logo Section */}
           <div className="flex items-center justify-start min-w-0">
-            <button 
-              onClick={() => onNavigate(isLoggedIn ? getDashboardView() : 'home')}
+            <button
+              onClick={() => navigate(isLoggedIn ? getDashboardView() : 'home')}
               className="group flex items-center gap-2 hover:opacity-100 transition-opacity text-center shrink-0"
             >
               <div className="relative">
@@ -100,7 +99,7 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
                 )}
               </div>
               <span className="text-2xl tracking-tight text-foreground font-bold">
-                {isDoctor ? 'ORYGA Plus' : (isHospital ? 'ORYGA Plus' : 'Oryga')}
+                {isDoctor ? 'ORYGA Plus' : isHospital ? 'ORYGA Plus' : 'Oryga'}
               </span>
             </button>
           </div>
@@ -111,10 +110,10 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
               {navLinks.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => onNavigate(item.id)}
+                  onClick={() => navigate(item.id)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                    currentView === item.id 
-                      ? 'bg-white text-primary shadow-sm ring-1 ring-black/5' 
+                    isActive(item.id)
+                      ? 'bg-white text-primary shadow-sm ring-1 ring-black/5'
                       : 'text-slate-600 hover:text-foreground hover:bg-slate-100/50'
                   }`}
                 >
@@ -127,10 +126,9 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
           {/* Right Actions */}
           <div className="flex items-center justify-end gap-3">
             <div className="hidden md:flex items-center gap-3">
-              {/* For Doctors Link (Public Only) */}
               {!isLoggedIn && (
                 <button
-                  onClick={() => onNavigate('doctor-landing')}
+                  onClick={() => navigate('doctor-landing')}
                   className="hidden xl:block text-sm font-medium text-slate-500 hover:text-primary transition-colors px-2"
                 >
                   For Doctors
@@ -138,21 +136,20 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
               )}
 
               {isLoggedIn ? (
-                // Logged In State
                 <div className="flex items-center bg-slate-50/80 backdrop-blur-sm p-1.5 rounded-full border border-slate-200/60 shadow-sm gap-1">
-                   {isPublicView ? (
-                     <Button 
+                  {isPublicView ? (
+                    <Button
                       size="sm"
                       className="rounded-full px-5 shadow-sm bg-primary hover:bg-primary/90 text-white border border-white/20"
-                      onClick={() => onNavigate(getDashboardView())}
+                      onClick={() => navigate(getDashboardView())}
                     >
                       <LayoutDashboard className="w-4 h-4 mr-2" />
                       Dashboard
                     </Button>
-                   ) : (
-                     <>
-                      <Button 
-                        variant="ghost" 
+                  ) : (
+                    <>
+                      <Button
+                        variant="ghost"
                         size="sm"
                         className="rounded-full px-4 text-slate-600 hover:text-foreground hover:bg-white transition-all"
                         onClick={handleLogout}
@@ -160,42 +157,43 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
                         Logout
                       </Button>
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-xs ml-1">
-                         {isDoctor ? 'DR' : (isHospital ? 'HA' : 'PT')}
+                        {isDoctor ? 'DR' : isHospital ? 'HA' : 'PT'}
                       </div>
-                     </>
-                   )}
+                    </>
+                  )}
                 </div>
               ) : (
-                // Guest State
                 <div className="flex items-center bg-slate-50/80 backdrop-blur-sm p-1.5 rounded-full border border-slate-200/60 shadow-sm gap-1">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     className="hidden lg:flex rounded-full px-4 text-slate-600 hover:text-foreground hover:bg-white transition-all"
-                    onClick={() => onNavigate('auth')}
+                    onClick={() => navigate('auth')}
                   >
                     Log in
                   </Button>
-                  
-                  <Button 
+
+                  <Button
                     size="sm"
                     className="rounded-full px-5 shadow-sm bg-primary hover:bg-primary/90 text-white border border-white/20"
-                    onClick={() => onNavigate('book-doctor')}
+                    onClick={() => navigate('book-doctor')}
                   >
                     Book
                   </Button>
                 </div>
               )}
 
-              {/* Emergency Button (Hide for Hospital) */}
               {!isHospital && (
-                <button 
-                  onClick={() => onNavigate('emergency')}
+                <button
+                  onClick={() => navigate('emergency')}
                   className="group relative flex items-center justify-center w-11 h-11 rounded-full bg-white border-2 border-red-50 hover:border-red-100 shadow-sm hover:shadow-md hover:shadow-red-100/50 transition-all duration-300"
                   title="Emergency SOS"
                 >
                   <span className="absolute inset-0 rounded-full bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <AlertCircle className="w-5 h-5 text-red-500 relative z-10 group-hover:scale-110 transition-transform duration-300" strokeWidth={2} />
+                  <AlertCircle
+                    className="w-5 h-5 text-red-500 relative z-10 group-hover:scale-110 transition-transform duration-300"
+                    strokeWidth={2}
+                  />
                   <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white z-20 animate-pulse"></span>
                 </button>
               )}
@@ -215,32 +213,37 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
         {mobileMenuOpen && (
           <div className="lg:hidden py-6 border-t border-slate-100 space-y-6 animate-in slide-in-from-top-5 duration-200">
             <div className="flex flex-col gap-2">
-              {(isLoggedIn ? (
-                  isPatient ? [
-                    { id: 'patient-app', label: 'Dashboard' },
-                    { id: 'patient-appointments', label: 'Appointments' },
-                    { id: 'health-records', label: 'Health Records' },
-                    { id: 'book-doctor', label: 'Find Doctors' },
-                    { id: 'patient-profile', label: 'My Profile' }
-                  ] : isDoctor ? [
-                    { id: 'doctor-app', label: 'Dashboard' },
-                    { id: 'doctor-appointments', label: 'Appointments' },
-                    { id: 'doctor-patients', label: 'My Patients' },
-                    { id: 'doctor-schedule', label: 'Schedule' }
-                  ] : [
-                    { id: 'hospital-admin', label: 'Dashboard' },
-                    { id: 'job-marketplace', label: 'Job Marketplace' }
-                  ]
-              ) : navLinks).map((item) => (
+              {(isLoggedIn
+                ? isPatient
+                  ? [
+                      { id: 'patient-app', label: 'Dashboard' },
+                      { id: 'patient-appointments', label: 'Appointments' },
+                      { id: 'health-records', label: 'Health Records' },
+                      { id: 'book-doctor', label: 'Find Doctors' },
+                      { id: 'patient-profile', label: 'My Profile' },
+                    ]
+                  : isDoctor
+                    ? [
+                        { id: 'doctor-app', label: 'Dashboard' },
+                        { id: 'doctor-appointments', label: 'Appointments' },
+                        { id: 'doctor-patients', label: 'My Patients' },
+                        { id: 'doctor-schedule', label: 'Schedule' },
+                      ]
+                    : [
+                        { id: 'hospital-admin', label: 'Dashboard' },
+                        { id: 'job-marketplace', label: 'Job Marketplace' },
+                      ]
+                : navLinks
+              ).map((item) => (
                 <button
                   key={item.id}
                   onClick={() => {
-                    onNavigate(item.id);
+                    navigate(item.id);
                     setMobileMenuOpen(false);
                   }}
                   className={`p-3.5 rounded-xl text-sm font-medium transition-colors text-left w-full ${
-                    currentView === item.id
-                      ? 'bg-primary/5 text-primary ring-1 ring-primary/20' 
+                    isActive(item.id)
+                      ? 'bg-primary/5 text-primary ring-1 ring-primary/20'
                       : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                   }`}
                 >
@@ -248,32 +251,32 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
                 </button>
               ))}
               {!isLoggedIn && (
-                 <>
-                    <button
-                      onClick={() => {
-                        onNavigate('about-us');
-                        setMobileMenuOpen(false);
-                      }}
-                      className="p-3.5 rounded-xl text-sm font-medium transition-colors text-left w-full bg-slate-50 text-slate-600 hover:bg-slate-100"
-                    >
-                      About Us
-                    </button>
-                    <button
-                      onClick={() => {
-                        onNavigate('doctor-landing');
-                        setMobileMenuOpen(false);
-                      }}
-                      className="p-3.5 rounded-xl text-sm font-medium transition-colors text-left w-full bg-slate-50 text-slate-600 hover:bg-slate-100"
-                    >
-                      For Doctors
-                    </button>
-                 </>
+                <>
+                  <button
+                    onClick={() => {
+                      navigate('about-us');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="p-3.5 rounded-xl text-sm font-medium transition-colors text-left w-full bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  >
+                    About Us
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('doctor-landing');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="p-3.5 rounded-xl text-sm font-medium transition-colors text-left w-full bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  >
+                    For Doctors
+                  </button>
+                </>
               )}
             </div>
 
             <div className="space-y-3">
               {isLoggedIn ? (
-                <Button 
+                <Button
                   className="w-full rounded-xl h-12 text-base shadow-lg"
                   variant="outline"
                   onClick={handleLogout}
@@ -282,23 +285,23 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
                   Logout
                 </Button>
               ) : (
-                <Button 
+                <Button
                   className="w-full rounded-xl h-12 text-base shadow-lg shadow-primary/20"
                   onClick={() => {
-                    onNavigate('book-doctor');
+                    navigate('book-doctor');
                     setMobileMenuOpen(false);
                   }}
                 >
                   Book Appointment
                 </Button>
               )}
-              
+
               {!isHospital && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full rounded-xl h-12 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
                   onClick={() => {
-                    onNavigate('emergency');
+                    navigate('emergency');
                     setMobileMenuOpen(false);
                   }}
                 >
@@ -307,17 +310,18 @@ export function Navigation({ currentView, onNavigate, isDoctorMode = false, user
                 </Button>
               )}
             </div>
-            
+
             {!isLoggedIn && (
               <div className="pt-6 border-t border-slate-100 text-center">
-                <button 
+                <button
                   onClick={() => {
-                      onNavigate('auth');
-                      setMobileMenuOpen(false);
+                    navigate('auth');
+                    setMobileMenuOpen(false);
                   }}
                   className="text-sm text-slate-500 hover:text-foreground font-medium inline-flex items-center justify-center gap-1"
                 >
-                  Already have an account? <span className="text-primary font-semibold">Sign In</span>
+                  Already have an account?{' '}
+                  <span className="text-primary font-semibold">Sign In</span>
                 </button>
               </div>
             )}

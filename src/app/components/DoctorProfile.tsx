@@ -13,13 +13,13 @@ import { Progress } from './ui/progress';
 import { supabase } from '@/lib/supabase';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface DoctorProfileProps {
-  onNavigate: (view: string) => void;
-  onBack: () => void;
 }
 
-export function DoctorProfile({ onNavigate, onBack }: DoctorProfileProps) {
+export function DoctorProfile() {
+  const { navigate, goBack } = useAppNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
@@ -193,7 +193,7 @@ export function DoctorProfile({ onNavigate, onBack }: DoctorProfileProps) {
                 <Eye className="w-4 h-4 mr-2" />
                 View as Patient
              </Button>
-             <Button variant="outline" onClick={onBack}>
+             <Button variant="outline" onClick={goBack}>
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 Dashboard
              </Button>

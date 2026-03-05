@@ -9,12 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface BookDoctorPageProps {
-  onNavigate: (view: string) => void;
-}
-
-export function BookDoctorPage({ onNavigate }: BookDoctorPageProps) {
+export function BookDoctorPage() {
+  const { navigate } = useAppNavigate();
   const [doctors, setDoctors] = useState<any[]>([]);
   const [hospitals, setHospitals] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -384,11 +382,11 @@ export function BookDoctorPage({ onNavigate }: BookDoctorPageProps) {
                       <div className="flex flex-col gap-3 justify-center min-w-[140px]">
                         <Button 
                             className="w-full"
-                            onClick={() => onNavigate('booking', doctor)}
+                            onClick={() => navigate('booking', doctor)}
                         >
                           Book Appointment
                         </Button>
-                        <Button variant="outline" className="w-full" onClick={() => onNavigate('doctor-detail', doctor)}>
+                        <Button variant="outline" className="w-full" onClick={() => navigate('doctor-detail', doctor)}>
                           View Profile
                         </Button>
                       </div>

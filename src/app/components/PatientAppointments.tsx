@@ -16,12 +16,13 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface PatientAppointmentsProps {
-  onNavigate: (view: string) => void;
 }
 
-export function PatientAppointments({ onNavigate }: PatientAppointmentsProps) {
+export function PatientAppointments() {
+  const { navigate } = useAppNavigate();
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -139,7 +140,7 @@ export function PatientAppointments({ onNavigate }: PatientAppointmentsProps) {
             <h1 className="text-2xl font-bold text-slate-900">My Appointments</h1>
             <p className="text-slate-500 text-sm mt-1">Manage your upcoming visits and history</p>
           </div>
-          <Button size="sm" onClick={() => onNavigate('book-doctor')} className="shadow-sm">
+          <Button size="sm" onClick={() => navigate('book-doctor')} className="shadow-sm">
             <Calendar className="w-4 h-4 mr-2" /> Book New
           </Button>
         </div>
@@ -153,7 +154,7 @@ export function PatientAppointments({ onNavigate }: PatientAppointmentsProps) {
             <p className="text-slate-500 text-sm max-w-[200px] mx-auto mb-6">
               Book your first appointment with a top specialist today.
             </p>
-            <Button onClick={() => onNavigate('book-doctor')}>Find a Doctor</Button>
+            <Button onClick={() => navigate('book-doctor')}>Find a Doctor</Button>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

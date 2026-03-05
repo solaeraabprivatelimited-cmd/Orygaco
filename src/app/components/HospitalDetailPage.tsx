@@ -7,15 +7,15 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { VerificationBadge } from './ui/VerificationBadge';
+import { useAppNavigate } from '../hooks/useAppNavigate';
+import { useParams, useLocation } from 'react-router';
 
-interface HospitalDetailPageProps {
-  onNavigate: (view: string) => void;
-  hospital?: any;
-}
-
-export function HospitalDetailPage({ onNavigate, hospital }: HospitalDetailPageProps) {
-  const [data, setData] = useState<any>(hospital);
-  const [loading, setLoading] = useState(!hospital);
+export function HospitalDetailPage() {
+  const { navigate, goBack } = useAppNavigate();
+  const { id } = useParams();
+  const location = useLocation();
+  const [data, setData] = useState<any>(location.state || null);
+  const [loading, setLoading] = useState(!location.state);
   const [previewMode, setPreviewMode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -27,32 +27,24 @@ export function HospitalDetailPage({ onNavigate, hospital }: HospitalDetailPageP
         }
     });
 
-    const hash = window.location.hash;
-    const queryString = hash.split('?')[1];
-    const params = new URLSearchParams(queryString);
-    const id = params.get('id');
-    const isPreview = params.get('preview') === 'true';
-
-    setPreviewMode(isPreview);
-
-    if (hospital) {
-        setData(hospital);
+    if (location.state) {
+        setData(location.state);
         setLoading(false);
     } else if (id) {
         fetchHospital(id);
     } else {
         setLoading(false);
     }
-  }, [hospital]);
+  }, [id]);
 
-  async function fetchHospital(id: string) {
+  async function fetchHospital(hospitalId: string) {
      try {
-         const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospitals/${id}`, {
+         const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospitals/${hospitalId}`, {
              headers: { 'Authorization': `Bearer ${publicAnonKey}` }
          });
          if (res.ok) {
-             const data = await res.json();
-             setData(data);
+             const fetchedData = await res.json();
+             setData(fetchedData);
          }
      } catch(e) { console.error(e); }
      finally { setLoading(false); }
@@ -68,7 +60,7 @@ export function HospitalDetailPage({ onNavigate, hospital }: HospitalDetailPageP
              <div className="text-center">
                  <h2 className="text-xl font-semibold mb-2">Hospital Not Found</h2>
                  <p className="text-muted-foreground mb-4">Please select a hospital from the list.</p>
-                 <Button onClick={() => onNavigate('hospitals')}>Go to Hospitals</Button>
+                 <Button onClick={() => navigate('hospitals')}>Go to Hospitals</Button>
              </div>
         </div>
      );
@@ -116,7 +108,7 @@ export function HospitalDetailPage({ onNavigate, hospital }: HospitalDetailPageP
         <Button 
           variant="ghost" 
           className="mb-4 text-sm"
-          onClick={() => onNavigate('hospitals')}
+          onClick={() => goBack()}
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back
@@ -182,7 +174,7 @@ export function HospitalDetailPage({ onNavigate, hospital }: HospitalDetailPageP
               <div className="flex gap-2 mt-4 pt-4 border-t border-border">
                 <Button 
                   className="flex-1 text-sm" 
-                  onClick={() => !(previewMode && isAdmin) && onNavigate('book-doctor')}
+                  onClick={() => !(previewMode && isAdmin) && navigate('book-doctor')}
                   disabled={previewMode && isAdmin}
                   title={(previewMode && isAdmin) ? "Booking disabled in preview mode" : ""}
                 >
@@ -400,7 +392,7 @@ export function HospitalDetailPage({ onNavigate, hospital }: HospitalDetailPageP
             <Card className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
               <h3 className="text-base mb-3">Quick Actions</h3>
               <div className="space-y-2">
-                <Button className="w-full text-sm" onClick={() => onNavigate('book-doctor')}>
+                <Button className="w-full text-sm" onClick={() => navigate('book-doctor')}>
                   <Users className="w-4 h-4 mr-2" />
                   Book Appointment
                 </Button>

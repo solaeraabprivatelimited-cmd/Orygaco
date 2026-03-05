@@ -11,250 +11,13 @@ import { Switch } from './ui/switch';
 import { supabase } from '@/lib/supabase';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface DoctorAppointmentsFlowProps {
-  onNavigate: (view: string) => void;
-  onBack: () => void;
 }
 
-type ViewMode = 'list' | 'detail' | 'prescription';
-
-// -- New Components --
-
-function PatientProfileCard({ patient }: { patient: any }) {
-    if (!patient) return null;
-    
-    return (
-        <Card className="p-4 bg-slate-50 border-slate-100">
-            <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-shrink-0 relative">
-                    <img
-                    src={patient.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400"}
-                    alt={patient.name}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm"
-                    />
-                    {patient.bloodGroup && (
-                        <Badge className="absolute -bottom-2 -right-2 text-[10px] px-1 bg-white text-slate-700 border shadow-sm">
-                            {patient.bloodGroup}
-                        </Badge>
-                    )}
-                </div>
-                <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <h3 className="text-lg font-bold text-slate-900 truncate">{patient.name}</h3>
-                        <Badge variant="outline" className="text-xs font-normal">
-                            {patient.age}Y • {patient.gender}
-                        </Badge>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2 mb-2">
-                        {patient.conditions?.map((c: string, i: number) => (
-                            <Badge key={i} variant="secondary" className="bg-red-50 text-red-700 border-red-100 text-[10px]">
-                                {c}
-                            </Badge>
-                        ))}
-                        {patient.allergies && (
-                            <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-100 text-[10px]">
-                                Allergy: {patient.allergies}
-                            </Badge>
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-4 text-xs text-slate-500">
-                        <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            Last Visit: {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'First Visit'}
-                        </span>
-                        {patient.lastMedication && (
-                            <span className="flex items-center gap-1" title={`Last Rx: ${patient.lastMedication}`}>
-                                <Pill className="w-3 h-3" />
-                                {patient.lastMedication}
-                            </span>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </Card>
-    );
-}
-
-function DoctorNotes({ appointmentId }: { appointmentId: string }) {
-    const [notes, setNotes] = useState('');
-    const [status, setStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
-
-    // Load initial notes
-    useEffect(() => {
-        async function loadNotes() {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) return;
-                
-                const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/notes/${appointmentId}`, {
-                    headers: { 
-                        'Authorization': `Bearer ${publicAnonKey}`,
-                        'X-Supabase-Auth': session.access_token
-                    }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setNotes(data.notes || '');
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-        loadNotes();
-    }, [appointmentId]);
-
-    // Auto-save logic
-    const saveNotes = useCallback(async (text: string) => {
-        setStatus('saving');
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return;
-
-            await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/notes`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${publicAnonKey}`,
-                    'X-Supabase-Auth': session.access_token 
-                },
-                body: JSON.stringify({
-                    authToken: session.access_token,
-                    appointmentId,
-                    notes: text
-                })
-            });
-            setStatus('saved');
-        } catch (e) {
-            setStatus('unsaved');
-        }
-    }, [appointmentId]);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (notes) saveNotes(notes);
-        }, 2000); // 2s debounce
-        return () => clearTimeout(timer);
-    }, [notes, saveNotes]);
-
-    return (
-        <Card className="p-4 border-l-4 border-l-blue-500">
-            <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-blue-600" />
-                    Clinical Notes (Private)
-                </h3>
-                <div className="flex items-center gap-2">
-                    {status === 'saving' && <span className="text-xs text-slate-400 animate-pulse">Saving...</span>}
-                    {status === 'saved' && <span className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> Saved</span>}
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="Voice to Text (Coming Soon)">
-                        <Mic className="w-3.5 h-3.5" />
-                    </Button>
-                </div>
-            </div>
-            <Textarea 
-                placeholder="Type clinical observations here..." 
-                className="min-h-[150px] resize-y bg-slate-50/50"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-            />
-        </Card>
-    );
-}
-
-function FollowUpSection({ appointmentId }: { appointmentId: string }) {
-    const [required, setRequired] = useState(false);
-    const [date, setDate] = useState('');
-    const [note, setNote] = useState('');
-
-    useEffect(() => {
-        // Load existing plan
-        async function loadPlan() {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) return;
-                
-                const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/follow-up/${appointmentId}`, {
-                    headers: { 
-                        'Authorization': `Bearer ${publicAnonKey}`,
-                        'X-Supabase-Auth': session.access_token
-                    }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.required) {
-                        setRequired(true);
-                        setDate(data.date);
-                        setNote(data.notes);
-                    }
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-        loadPlan();
-    }, [appointmentId]);
-
-    const handleSave = async () => {
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return;
-
-            await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/follow-up`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${publicAnonKey}`,
-                    'X-Supabase-Auth': session.access_token 
-                },
-                body: JSON.stringify({
-                    authToken: session.access_token,
-                    appointmentId,
-                    required,
-                    date,
-                    notes: note
-                })
-            });
-            toast.success("Follow-up plan updated");
-        } catch (e) {
-            toast.error("Failed to save follow-up");
-        }
-    };
-
-    return (
-        <Card className="p-4">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-purple-600" />
-                    Follow-up Plan
-                </h3>
-                <Switch checked={required} onCheckedChange={setRequired} />
-            </div>
-            
-            {required && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                        <div>
-                            <Label className="text-xs">Suggested Date</Label>
-                            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                        </div>
-                        <div>
-                            <Label className="text-xs">Note for Patient</Label>
-                            <Input placeholder="e.g. After blood test results" value={note} onChange={(e) => setNote(e.target.value)} />
-                        </div>
-                    </div>
-                    <Button size="sm" variant="outline" className="w-full" onClick={handleSave}>Save Plan</Button>
-                </div>
-            )}
-        </Card>
-    );
-}
-
-// -- Main Component --
-
-export function DoctorAppointmentsFlow({ onNavigate, onBack }: DoctorAppointmentsFlowProps) {
+export function DoctorAppointmentsFlow() {
+  const { navigate, goBack } = useAppNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -372,7 +135,7 @@ export function DoctorAppointmentsFlow({ onNavigate, onBack }: DoctorAppointment
   const handleStartConsultation = (appointment: any) => {
     setSelectedAppointment(appointment);
     if (appointment.type === 'video') {
-      onNavigate('teleconsult');
+      navigate('teleconsult');
     } else {
       setViewMode('detail');
     }
@@ -391,7 +154,7 @@ export function DoctorAppointmentsFlow({ onNavigate, onBack }: DoctorAppointment
                 <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-1">Appointments</h1>
                 <p className="text-muted-foreground">Manage your consultation schedule and patient visits</p>
               </div>
-              <Button variant="outline" onClick={onBack} className="hidden sm:flex">
+              <Button variant="outline" onClick={goBack} className="hidden sm:flex">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 Back to Dashboard
               </Button>

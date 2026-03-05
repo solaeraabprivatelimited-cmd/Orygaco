@@ -10,51 +10,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface DoctorDashboardProps {
-  onNavigate: (view: string) => void;
-}
-
-const patientActivityData = [
-  { name: 'Mon', visits: 12 },
-  { name: 'Tue', visits: 18 },
-  { name: 'Wed', visits: 15 },
-  { name: 'Thu', visits: 22 },
-  { name: 'Fri', visits: 20 },
-  { name: 'Sat', visits: 10 },
-  { name: 'Sun', visits: 5 },
-];
-
-interface KPIStats {
-  patientsSeenToday: number;
-  todaysEarnings: number;
-  nextAppointmentTime: string | null;
-  totalPatients: number;
-  averageRating: number;
-  monthlyRevenue: number;
-}
-
-interface NextAppointment {
-  appointmentId: string;
-  patientId: string;
-  patientName: string;
-  type: 'Video' | 'In-person';
-  startTime: string;
-  date: string;
-  status: string;
-  image?: string;
-}
-
-interface ActionItem {
-  id: string;
-  type: 'prescription' | 'report' | 'follow_up' | 'no_show';
-  label: string;
-  action: string;
-  priority: 'high' | 'medium' | 'low';
-  date: string;
-}
-
-export function DoctorDashboard({ onNavigate }: DoctorDashboardProps) {
+export function DoctorDashboard() {
+  const { navigate } = useAppNavigate();
   const [doctor, setDoctor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
@@ -232,7 +191,7 @@ export function DoctorDashboard({ onNavigate }: DoctorDashboardProps) {
      return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
         <p>Please sign in to access the doctor portal</p>
-        <Button onClick={() => onNavigate('auth')}>Sign In</Button>
+        <Button onClick={() => navigate('auth')}>Sign In</Button>
       </div>
     );
   }
@@ -264,7 +223,7 @@ export function DoctorDashboard({ onNavigate }: DoctorDashboardProps) {
                     <Bell className="w-5 h-5" />
                     <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
                 </Button>
-                <div className="flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer" onClick={() => onNavigate('doctor-profile')}>
+                <div className="flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer" onClick={() => navigate('doctor-profile')}>
                     <div className="text-right hidden sm:block">
                         <div className="text-sm font-medium text-slate-900">{doctor.name}</div>
                         <div className="text-xs text-slate-500">{doctor.specialty}</div>
@@ -298,7 +257,7 @@ export function DoctorDashboard({ onNavigate }: DoctorDashboardProps) {
                  <Button variant="secondary" className="hidden sm:flex" onClick={() => setShowAvailabilityModal(true)}>
                     Update Availability
                 </Button>
-                <Button onClick={() => onNavigate('doctor-patients')} className="px-6">
+                <Button onClick={() => navigate('doctor-patients')} className="px-6">
                     <Plus className="w-4 h-4 mr-2" /> New Patient
                 </Button>
             </div>
@@ -342,7 +301,7 @@ export function DoctorDashboard({ onNavigate }: DoctorDashboardProps) {
                         </div>
                         
                         <div className="flex gap-3 w-full md:w-auto">
-                            <Button variant="outline" size="lg" className="flex-1 md:flex-none" onClick={() => onNavigate('doctor-patients')}>
+                            <Button variant="outline" size="lg" className="flex-1 md:flex-none" onClick={() => navigate('doctor-patients')}>
                                 View Profile
                             </Button>
                             <Button size="lg" className="flex-1 md:flex-none shadow-lg shadow-primary/20">
@@ -595,7 +554,7 @@ export function DoctorDashboard({ onNavigate }: DoctorDashboardProps) {
                     <Card className="p-5 border-none shadow-sm bg-white/60 backdrop-blur-xl">
                         <div className="flex items-center justify-between mb-4">
                              <h3 className="font-semibold text-slate-900">Recent Patients</h3>
-                             <Button variant="ghost" size="sm" className="text-xs text-primary h-8" onClick={() => onNavigate('doctor-patients')}>View All</Button>
+                             <Button variant="ghost" size="sm" className="text-xs text-primary h-8" onClick={() => navigate('doctor-patients')}>View All</Button>
                         </div>
                         <div className="space-y-4">
                             {/* Placeholder for recent patients */}
@@ -608,7 +567,7 @@ export function DoctorDashboard({ onNavigate }: DoctorDashboardProps) {
 
                 {/* My Blogs */}
                 <motion.div variants={itemVariants}>
-                    <Card className="p-5 border-none shadow-sm bg-gradient-to-br from-primary/5 to-primary/10 hover:shadow-md transition-all cursor-pointer" onClick={() => onNavigate('doctor-blog-management')}>
+                    <Card className="p-5 border-none shadow-sm bg-gradient-to-br from-primary/5 to-primary/10 hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('doctor-blog-management')}>
                         <div className="flex items-center justify-between mb-4">
                             <div className="p-2 bg-primary/10 rounded-lg">
                                 <FileText className="w-5 h-5 text-primary" />

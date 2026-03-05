@@ -8,13 +8,13 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { supabase } from '@/lib/supabase';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface PatientProfileProps {
-  onNavigate: (view: string) => void;
-  onBack: () => void;
 }
 
-export function PatientProfile({ onNavigate, onBack }: PatientProfileProps) {
+export function PatientProfile() {
+  const { navigate, goBack } = useAppNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>({
@@ -75,7 +75,7 @@ export function PatientProfile({ onNavigate, onBack }: PatientProfileProps) {
       }
 
       // 3. If neither, redirect
-      onNavigate('auth');
+      navigate('auth');
       
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -170,7 +170,7 @@ export function PatientProfile({ onNavigate, onBack }: PatientProfileProps) {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={onBack} className="-ml-2">
+          <Button variant="ghost" size="icon" onClick={goBack} className="-ml-2">
             <ArrowLeft className="w-5 h-5 text-slate-500" />
           </Button>
           <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>

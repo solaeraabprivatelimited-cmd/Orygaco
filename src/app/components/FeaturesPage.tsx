@@ -2,12 +2,10 @@ import { Video, Shield, Activity, MapPin, Users, Smartphone, AlertCircle, FileTe
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface FeaturesPageProps {
-  onNavigate: (view: string) => void;
-}
-
-export function FeaturesPage({ onNavigate }: FeaturesPageProps) {
+export function FeaturesPage() {
+  const { navigate } = useAppNavigate();
   const features = [
     {
       icon: <Video className="w-8 h-8" />,
@@ -202,7 +200,7 @@ export function FeaturesPage({ onNavigate }: FeaturesPageProps) {
               <p className="text-sm text-muted-foreground mb-4">
                 Full-featured web access from any browser
               </p>
-              <Button variant="outline" size="sm" onClick={() => onNavigate('book-doctor')}>
+              <Button variant="outline" size="sm" onClick={() => navigate('book-doctor')}>
                 Get Started
               </Button>
             </Card>
@@ -232,7 +230,7 @@ export function FeaturesPage({ onNavigate }: FeaturesPageProps) {
             <Button 
               size="lg" 
               variant="secondary"
-              onClick={() => onNavigate('book-doctor')}
+              onClick={() => navigate('book-doctor')}
             >
               Book Your First Appointment
             </Button>
@@ -240,7 +238,7 @@ export function FeaturesPage({ onNavigate }: FeaturesPageProps) {
               size="lg" 
               variant="outline"
               className="bg-transparent border-white text-white hover:bg-white/10"
-              onClick={() => onNavigate('patient-app')}
+              onClick={() => navigate('patient-app')}
             >
               Download App
             </Button>

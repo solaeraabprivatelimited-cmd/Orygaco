@@ -1,11 +1,8 @@
 import { Home, Search, FileText, Calendar, Users, Clock, LayoutGrid, Briefcase, Building2, LucideIcon } from 'lucide-react';
+import { useLocation } from 'react-router';
 import { cn } from './ui/utils';
-
-interface BottomNavigationProps {
-  currentView: string;
-  onNavigate: (view: string) => void;
-  userRole?: 'guest' | 'patient' | 'doctor' | 'hospital';
-}
+import { useAuth } from '../contexts/AuthContext';
+import { useAppNavigate, pathToView } from '../hooks/useAppNavigate';
 
 interface NavItem {
   id: string;
@@ -13,20 +10,25 @@ interface NavItem {
   icon: LucideIcon;
 }
 
-export function BottomNavigation({ currentView, onNavigate, userRole = 'guest' }: BottomNavigationProps) {
+export function BottomNavigation() {
+  const { navigate } = useAppNavigate();
+  const { userRole } = useAuth();
+  const location = useLocation();
+  const currentView = pathToView(location.pathname);
+
   const isPatientDashboard = userRole === 'patient';
   const isDoctorDashboard = userRole === 'doctor';
   const isHospitalDashboard = userRole === 'hospital';
 
-  const publicViews = ['home', 'features', 'blogs', 'blog-detail', 'about-us', 'doctor-landing', 'hospital-landing', 'hospitals', 'doctor-detail', 'hospital-detail', 'auth', 'auth-doctor', 'auth-hospital', 'emergency'];
+  const publicPaths = ['/', '/about', '/features', '/blogs', '/contact', '/find-doctors', '/for-doctors', '/for-hospitals', '/hospitals', '/emergency'];
+  const isPublicView = publicPaths.includes(location.pathname) ||
+    location.pathname.startsWith('/blogs/') ||
+    location.pathname.startsWith('/doctors/') ||
+    location.pathname.startsWith('/hospitals/') ||
+    location.pathname.startsWith('/auth');
 
-  if (publicViews.includes(currentView)) {
-    return null;
-  }
-
-  if (!isPatientDashboard && !isDoctorDashboard && !isHospitalDashboard) {
-    return null;
-  }
+  if (isPublicView) return null;
+  if (!isPatientDashboard && !isDoctorDashboard && !isHospitalDashboard) return null;
 
   let navItems: NavItem[] = [];
 
@@ -59,11 +61,10 @@ export function BottomNavigation({ currentView, onNavigate, userRole = 'guest' }
           const activeColor = "#E63E6D";
           const inactiveColor = "#62748E";
           const color = isActive ? activeColor : inactiveColor;
-          
+
           let iconContent;
 
           if (item.id === 'patient-app') {
-            // Home
             iconContent = (
               <div className="relative shrink-0 size-6">
                 <svg className="block size-full" fill="none" viewBox="0 0 24 24">
@@ -72,7 +73,6 @@ export function BottomNavigation({ currentView, onNavigate, userRole = 'guest' }
               </div>
             );
           } else if (item.id === 'patient-appointments') {
-            // Appts
             iconContent = (
               <div className="relative shrink-0 size-6">
                 <div className="absolute inset-[2.5px_3px_4px_3px]">
@@ -85,7 +85,6 @@ export function BottomNavigation({ currentView, onNavigate, userRole = 'guest' }
               </div>
             );
           } else if (item.id === 'book-doctor') {
-            // Find Dr
             iconContent = (
               <div className="relative shrink-0 size-6">
                 <svg className="block size-full" fill="none" viewBox="0 0 24 24">
@@ -94,7 +93,6 @@ export function BottomNavigation({ currentView, onNavigate, userRole = 'guest' }
               </div>
             );
           } else if (item.id === 'health-records') {
-            // Records
             iconContent = (
               <div className="relative shrink-0 size-6">
                 <svg className="block size-full" fill="none" viewBox="0 0 24 24">
@@ -111,7 +109,7 @@ export function BottomNavigation({ currentView, onNavigate, userRole = 'guest' }
           return (
             <button
               key={item.id}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => navigate(item.id)}
               className={cn(
                 "flex flex-col items-center justify-center w-full h-full gap-1",
                 isActive ? "text-[#E63E6D]" : "text-[#62748E]"

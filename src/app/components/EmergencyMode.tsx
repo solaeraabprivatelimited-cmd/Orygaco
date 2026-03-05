@@ -3,12 +3,10 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import logo from 'figma:asset/79875bb7427953c37958c445f51a4ce2f3d7aa79.png';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface EmergencyModeProps {
-  onNavigate: (view: string) => void;
-}
-
-export function EmergencyMode({ onNavigate }: EmergencyModeProps) {
+export function EmergencyMode() {
+  const { navigate } = useAppNavigate();
   const nearbyHospitals = [
     {
       id: 1,
@@ -184,7 +182,7 @@ export function EmergencyMode({ onNavigate }: EmergencyModeProps) {
         <div className="mt-6 text-center">
           <Button 
             variant="ghost" 
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('home')}
             className="text-sm text-red-700 hover:text-red-900"
           >
             Exit Emergency Mode

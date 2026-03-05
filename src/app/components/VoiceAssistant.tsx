@@ -3,13 +3,14 @@ import { Mic, X, Loader2, Volume2, Search, Calendar, MapPin, AlertCircle } from 
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface VoiceAssistantProps {
-  onNavigate: (view: string, data?: any) => void;
   userName?: string;
 }
 
-export function VoiceAssistant({ onNavigate, userName = 'there' }: VoiceAssistantProps) {
+export function VoiceAssistant({ userName = 'there' }: VoiceAssistantProps) {
+  const { navigate } = useAppNavigate();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState<string | null>(null);
@@ -96,16 +97,16 @@ export function VoiceAssistant({ onNavigate, userName = 'there' }: VoiceAssistan
 
     if (lowerText.includes('appointment') || lowerText.includes('book') || lowerText.includes('doctor')) {
       reply = "I can help you book an appointment. Taking you to the booking section.";
-      action = () => onNavigate('book-doctor');
+      action = () => navigate('book-doctor');
     } else if (lowerText.includes('hospital') || lowerText.includes('near me')) {
       reply = "Searching for top hospitals nearby.";
-      action = () => onNavigate('hospitals');
+      action = () => navigate('hospitals');
     } else if (lowerText.includes('record') || lowerText.includes('health') || lowerText.includes('report')) {
       reply = "Opening your health records.";
-      action = () => onNavigate('health-records');
+      action = () => navigate('health-records');
     } else if (lowerText.includes('emergency') || lowerText.includes('help')) {
       reply = "Activating Emergency Mode. Hang tight.";
-      action = () => onNavigate('emergency');
+      action = () => navigate('emergency');
     } else if (lowerText.includes('hello') || lowerText.includes('hi')) {
       reply = `Hello ${userName}! How can I assist you with your health today?`;
     }

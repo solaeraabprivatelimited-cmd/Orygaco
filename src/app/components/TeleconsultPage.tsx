@@ -11,15 +11,19 @@ import { ScrollArea } from './ui/scroll-area';
 import { supabase } from '@/lib/supabase';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
+import { useAppNavigate } from '../hooks/useAppNavigate';
+import { useAuth } from '../contexts/AuthContext';
 
 interface TeleconsultPageProps {
-  onNavigate: (view: string) => void;
-  userType?: 'patient' | 'doctor';
-  appointmentId?: string; // Optional context
-  patientId?: string; // Optional context
+  appointmentId?: string;
+  patientId?: string;
 }
 
-export function TeleconsultPage({ onNavigate, userType = 'doctor', appointmentId = 'mock-apt-1', patientId = 'mock-patient-1' }: TeleconsultPageProps) {
+export function TeleconsultPage({ appointmentId = 'mock-apt-1', patientId = 'mock-patient-1' }: TeleconsultPageProps) {
+  const { navigate } = useAppNavigate();
+  const { userRole } = useAuth();
+  const userType = userRole === 'doctor' ? 'doctor' : 'patient';
+
   // State
   const [micOn, setMicOn] = useState(true);
   const [videoOn, setVideoOn] = useState(true);
@@ -116,10 +120,10 @@ export function TeleconsultPage({ onNavigate, userType = 'doctor', appointmentId
           await saveNotes(false);
           
           toast.success("Consultation Completed");
-          onNavigate('doctor-appointments');
+          navigate('doctor-appointments');
       } catch (e) {
           console.error("End call error", e);
-          onNavigate('doctor-appointments'); // Fallback navigation
+          navigate('doctor-appointments'); // Fallback navigation
       }
   }
 

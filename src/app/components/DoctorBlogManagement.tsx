@@ -8,16 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { DoctorBlogEditor } from './DoctorBlogEditor';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from './ui/alert-dialog';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface Blog {
   id: string;
@@ -33,10 +24,10 @@ interface Blog {
 }
 
 interface DoctorBlogManagementProps {
-  onBack: () => void;
 }
 
-export function DoctorBlogManagement({ onBack }: DoctorBlogManagementProps) {
+export function DoctorBlogManagement() {
+  const { goBack } = useAppNavigate();
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +48,7 @@ export function DoctorBlogManagement({ onBack }: DoctorBlogManagementProps) {
       if (!session) return;
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/blogs`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/blogs`,
         {
           headers: {
             'Authorization': `Bearer ${session.access_token}`
@@ -83,7 +74,7 @@ export function DoctorBlogManagement({ onBack }: DoctorBlogManagementProps) {
       if (!session) return;
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/blogs/${blogId}`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/blogs/${blogId}`,
         {
           method: 'DELETE',
           headers: {

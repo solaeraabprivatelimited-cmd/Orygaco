@@ -6,73 +6,10 @@ import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface JobMarketplaceProps {
-  onNavigate: (view: string) => void;
-}
-
-const jobListings = [
-  {
-    id: 1,
-    title: "Cardiologist - Full Time",
-    hospital: "Apollo Hospital",
-    location: "Mumbai, Maharashtra",
-    type: "Full-time",
-    experience: "5-10 years",
-    salary: "₹15-20 LPA",
-    postedDate: "2 days ago",
-    applicants: 12,
-    verified: true,
-    benefits: ["Health Insurance", "Paid Leave", "CME Support"]
-  },
-  {
-    id: 2,
-    title: "General Physician - Part Time",
-    hospital: "Fortis Healthcare",
-    location: "Bangalore, Karnataka",
-    type: "Part-time",
-    experience: "3-8 years",
-    salary: "₹8-12 LPA",
-    postedDate: "5 days ago",
-    applicants: 8,
-    verified: true,
-    benefits: ["Flexible Hours", "Performance Bonus"]
-  },
-  {
-    id: 3,
-    title: "Emergency Medicine Specialist",
-    hospital: "Max Hospital",
-    location: "Delhi, NCR",
-    type: "Full-time",
-    experience: "5+ years",
-    salary: "₹18-25 LPA",
-    postedDate: "1 week ago",
-    applicants: 15,
-    verified: true,
-    benefits: ["Housing Allowance", "Health Insurance", "Retirement Benefits"]
-  }
-];
-
-const myApplications = [
-  {
-    id: 1,
-    position: "Senior Cardiologist",
-    hospital: "AIIMS",
-    location: "New Delhi",
-    appliedDate: "Dec 15, 2024",
-    status: "Under Review"
-  },
-  {
-    id: 2,
-    position: "Consultant Physician",
-    hospital: "Medanta",
-    location: "Gurgaon",
-    appliedDate: "Dec 10, 2024",
-    status: "Interview Scheduled"
-  }
-];
-
-export function JobMarketplace({ onNavigate }: JobMarketplaceProps) {
+export function JobMarketplace() {
+  const { navigate } = useAppNavigate();
   const [activeTab, setActiveTab] = useState('browse');
 
   return (

@@ -2612,6 +2612,16 @@ app.get(`${BASE_PATH}/doctors`, async (c) => {
   return c.json(profiles);
 });
 
+// Get Single Public Doctor by ID
+app.get(`${BASE_PATH}/doctors/:id`, async (c) => {
+  const id = c.req.param('id');
+  const profile = await kv.get(`doctor_profile:${id}`);
+  if (!profile) {
+    return c.json({ error: "Doctor not found" }, 404);
+  }
+  return c.json(profile);
+});
+
 // --- HOSPITAL MANAGE DOCTORS ---
 
 // Get Doctors for a Hospital
@@ -3390,6 +3400,26 @@ app.get(`${BASE_PATH}/blogs`, async (c) => {
   return c.json(blogs);
 });
 
+// Get Single Blog by ID or Slug
+app.get(`${BASE_PATH}/blogs/:id`, async (c) => {
+  const id = c.req.param('id');
+  
+  // Try direct KV lookup by ID first
+  let blog = await kv.get(`blog_post:${id}`);
+  
+  if (!blog) {
+    // Fallback: search by slug or ID in all blogs
+    const allBlogs = await kv.getByPrefix('blog_post:');
+    blog = allBlogs.find((b: any) => b.id === id || b.slug === id);
+  }
+  
+  if (!blog) {
+    return c.json({ error: "Blog not found" }, 404);
+  }
+  
+  return c.json(blog);
+});
+
 // --- DOCTOR-WRITTEN BLOGS (ADDITIVE FEATURE) ---
 
 // Helper function to generate slug from title
@@ -3436,10 +3466,12 @@ app.post(`${BASE_PATH}/doctor/blogs`, async (c) => {
   const blogId = blogData.id || crypto.randomUUID();
   const slug = blogData.slug || generateSlug(blogData.title);
 
+  const authorName = doctorProfile?.name || user.user_metadata?.full_name || user.email;
   const blog = {
     id: blogId,
     doctorId: user.id,
-    doctorName: doctorProfile?.name || user.user_metadata?.full_name || user.email,
+    doctorName: authorName,
+    author: `Dr. ${authorName}`,
     doctorSpecialty: doctorProfile?.specialty || 'General Practitioner',
     doctorImage: doctorProfile?.image || null,
     hospitalId: doctorProfile?.hospitalId || null,
@@ -3451,6 +3483,7 @@ app.post(`${BASE_PATH}/doctor/blogs`, async (c) => {
     tags: blogData.tags || [],
     content: blogData.content,
     readTime: blogData.readTime || calculateReadTime(blogData.content),
+    targetAudience: blogData.targetAudience || ['Everyone'],
     status: blogData.status || 'draft',
     reviewNotes: blogData.reviewNotes || null,
     publishedAt: blogData.status === 'published' ? (blogData.publishedAt || new Date().toISOString()) : null,
