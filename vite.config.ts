@@ -1,19 +1,29 @@
 import { defineConfig } from 'vite'
-import path from 'path'
-import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
+
+function figmaAssetsPlugin() {
+  const FIGMA_MAKE_KEY = 'Ot9IoDKZlYYU3v1pFUIw73'
+  return {
+    name: 'figma-assets',
+    resolveId(id: string) {
+      if (id.startsWith('figma:asset/')) {
+        return '\0' + id
+      }
+    },
+    load(id: string) {
+      if (id.startsWith('\0figma:asset/')) {
+        const hash = id.replace('\0figma:asset/', '')
+        const url = `https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/${FIGMA_MAKE_KEY}/${hash}`
+        return `export default "${url}"`
+      }
+    }
+  }
+}
 
 export default defineConfig({
-  plugins: [
-    // The React and Tailwind plugins are both required for Make, even if
-    // Tailwind is not being actively used – do not remove them
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [react(), figmaAssetsPlugin()],
   resolve: {
-    alias: {
-      // Alias @ to the src directory
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
+    alias: { '@': path.resolve(__dirname, './src') }
+  }
 })
