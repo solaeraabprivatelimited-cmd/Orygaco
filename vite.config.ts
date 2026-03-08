@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import path from 'path'
 
 function figmaAssetsPlugin() {
   const FIGMA_MAKE_KEY = 'Ot9IoDKZlYYU3v1pFUIw73'
@@ -25,4 +26,9 @@ export default defineConfig({
     tailwindcss(),
     figmaAssetsPlugin(),
   ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 })
