@@ -15,9 +15,6 @@ import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
 import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface DoctorProfileProps {
-}
-
 export function DoctorProfile() {
   const { navigate, goBack } = useAppNavigate();
   const [isEditing, setIsEditing] = useState(false);

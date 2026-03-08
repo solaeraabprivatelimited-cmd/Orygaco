@@ -11,10 +11,6 @@ import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
 import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface DoctorScheduleProps {
-  // Props removed - using hooks now
-}
-
 export function DoctorSchedule() {
   const { navigate, goBack } = useAppNavigate();
   const [schedule, setSchedule] = useState(mockSchedule);
@@ -504,3 +500,18 @@ export function DoctorSchedule() {
     </div>
   );
 }
+
+const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
+
+type ScheduleDay = { enabled: boolean; slots: { start: string; end: string }[] };
+type Schedule = Record<string, ScheduleDay>;
+
+const mockSchedule: Schedule = {
+  Monday: { enabled: true, slots: [{ start: '09:00', end: '13:00' }, { start: '16:00', end: '20:00' }] },
+  Tuesday: { enabled: true, slots: [{ start: '09:00', end: '13:00' }, { start: '16:00', end: '20:00' }] },
+  Wednesday: { enabled: true, slots: [{ start: '09:00', end: '13:00' }] },
+  Thursday: { enabled: true, slots: [{ start: '09:00', end: '13:00' }, { start: '16:00', end: '20:00' }] },
+  Friday: { enabled: true, slots: [{ start: '09:00', end: '13:00' }, { start: '16:00', end: '20:00' }] },
+  Saturday: { enabled: true, slots: [{ start: '10:00', end: '14:00' }] },
+  Sunday: { enabled: false, slots: [] },
+};

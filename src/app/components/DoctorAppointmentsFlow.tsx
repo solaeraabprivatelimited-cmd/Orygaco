@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Calendar, Clock, Video, MapPin, User, Phone, Mail, FileText, Pill, X, Check, ChevronLeft, Search, Filter, Download, MessageSquare, AlertCircle, CheckCircle2, XCircle, AlertTriangle, Save, Mic, Activity } from 'lucide-react';
+import { Calendar, Clock, Video, MapPin, User, Phone, Mail, FileText, Pill, X, Check, ChevronLeft, Search, Filter, Download, MessageSquare, AlertCircle, CheckCircle2, XCircle, AlertTriangle, Save, Mic, Activity, Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
@@ -12,9 +12,6 @@ import { supabase } from '@/lib/supabase';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
 import { useAppNavigate } from '../hooks/useAppNavigate';
-
-interface DoctorAppointmentsFlowProps {
-}
 
 export function DoctorAppointmentsFlow() {
   const { navigate, goBack } = useAppNavigate();
@@ -446,4 +443,73 @@ export function DoctorAppointmentsFlow() {
   }
 
   return <div>Loading...</div>;
+}
+
+type ViewMode = 'list' | 'detail';
+
+function PatientProfileCard({ patient }: { patient: any }) {
+  return (
+    <Card className="p-4">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+          {patient.image ? (
+            <img src={patient.image} alt={patient.name} className="w-full h-full object-cover" />
+          ) : (
+            <User className="w-7 h-7 text-slate-400" />
+          )}
+        </div>
+        <div>
+          <h3 className="font-semibold text-lg">{patient.name || 'Unknown'}</h3>
+          <p className="text-sm text-muted-foreground">{patient.age ? `${patient.age} years` : ''} {patient.gender || ''}</p>
+        </div>
+      </div>
+      {patient.phone && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Phone className="w-3 h-3" /> {patient.phone}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function DoctorNotes({ appointmentId }: { appointmentId: string }) {
+  const [notes, setNotes] = useState('');
+  return (
+    <Card className="p-4">
+      <h3 className="font-semibold flex items-center gap-2 mb-3">
+        <FileText className="w-4 h-4 text-blue-600" /> Clinical Notes
+      </h3>
+      <Textarea
+        placeholder="Write your clinical notes here..."
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        className="min-h-[120px]"
+      />
+      <div className="flex justify-end mt-2">
+        <Button size="sm" variant="outline">
+          <Save className="w-3 h-3 mr-1" /> Save
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+function FollowUpSection({ appointmentId }: { appointmentId: string }) {
+  return (
+    <Card className="p-4">
+      <h3 className="font-semibold flex items-center gap-2 mb-3">
+        <Calendar className="w-4 h-4 text-purple-600" /> Follow-up Plan
+      </h3>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div>
+          <Label className="text-xs text-muted-foreground">Follow-up Date</Label>
+          <Input type="date" className="mt-1" />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground">Follow-up Notes</Label>
+          <Input placeholder="e.g. Review BP readings" className="mt-1" />
+        </div>
+      </div>
+    </Card>
+  );
 }

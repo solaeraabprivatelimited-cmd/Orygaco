@@ -13,8 +13,7 @@ import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
 import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface DoctorPatientsProps {
-}
+type ViewMode = 'list' | 'detail';
 
 export function DoctorPatients() {
   const { navigate, goBack } = useAppNavigate();
@@ -437,5 +436,101 @@ export function DoctorPatients() {
         </div>
       </div>
     </div>
+  );
+}
+
+const mockPatients = [
+  {
+    id: '1', name: 'Rajesh Kumar', age: 45, gender: 'Male', phone: '+91 98765 43210',
+    email: 'rajesh@example.com', bloodGroup: 'O+', image: '',
+    conditions: ['Hypertension', 'Type 2 Diabetes'],
+    currentMedications: ['Amlodipine 5mg', 'Metformin 500mg'],
+    lastVisit: '2025-12-15', totalVisits: 12,
+    consultations: [
+      { date: '2025-12-15', diagnosis: 'Routine BP Check', type: 'In-person', status: 'Completed', complaint: 'Headache', outcome: 'Stable' },
+      { date: '2025-11-10', diagnosis: 'Diabetes Review', type: 'Video', status: 'Completed', complaint: 'Fatigue', outcome: 'Improved' },
+    ],
+    vitalHistory: [
+      { date: '2025-12-15', bp: '135/88', pulse: '82', bmi: '27.5' },
+      { date: '2025-11-10', bp: '128/82', pulse: '78', bmi: '27.2' },
+    ],
+  },
+  {
+    id: '2', name: 'Priya Nair', age: 32, gender: 'Female', phone: '+91 87654 32109',
+    email: 'priya@example.com', bloodGroup: 'A+', image: '',
+    conditions: ['Asthma'],
+    currentMedications: ['Salbutamol Inhaler'],
+    lastVisit: '2025-12-20', totalVisits: 5,
+    consultations: [
+      { date: '2025-12-20', diagnosis: 'Seasonal Asthma Flare', type: 'Video', status: 'Completed', complaint: 'Breathlessness', outcome: 'Treated' },
+    ],
+    vitalHistory: [
+      { date: '2025-12-20', bp: '118/76', pulse: '88', bmi: '22.1' },
+    ],
+  },
+  {
+    id: '3', name: 'Amit Patel', age: 58, gender: 'Male', phone: '+91 76543 21098',
+    email: 'amit@example.com', bloodGroup: 'B+', image: '',
+    conditions: ['Coronary Artery Disease', 'Hyperlipidemia'],
+    currentMedications: ['Atorvastatin 20mg', 'Aspirin 75mg', 'Metoprolol 50mg'],
+    lastVisit: '2025-12-18', totalVisits: 20,
+    consultations: [
+      { date: '2025-12-18', diagnosis: 'Post-Angioplasty Follow-up', type: 'In-person', status: 'Completed', complaint: 'Chest discomfort', outcome: 'Stable' },
+    ],
+    vitalHistory: [
+      { date: '2025-12-18', bp: '142/92', pulse: '95', bmi: '29.8' },
+      { date: '2025-11-20', bp: '138/88', pulse: '90', bmi: '29.5' },
+    ],
+  },
+];
+
+function RiskCard({ patientId, risk, onUpdate }: { patientId: string; risk: any; onUpdate: () => void }) {
+  return (
+    <Card className={`p-4 border-l-4 ${risk?.level === 'HIGH' ? 'border-l-red-500' : risk?.level === 'MEDIUM' ? 'border-l-amber-500' : 'border-l-green-500'}`}>
+      <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
+        <AlertTriangle className="w-3 h-3" /> Risk Level
+      </h4>
+      <Badge className={risk?.level === 'HIGH' ? 'bg-red-100 text-red-800' : risk?.level === 'MEDIUM' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}>
+        {risk?.level || 'LOW'}
+      </Badge>
+      {risk?.reason && <p className="text-xs text-muted-foreground mt-2">{risk.reason}</p>}
+    </Card>
+  );
+}
+
+function FollowUpCard({ patientId, followup, onUpdate }: { patientId: string; followup: any; onUpdate: () => void }) {
+  return (
+    <Card className="p-4">
+      <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
+        <Calendar className="w-3 h-3" /> Follow-up
+      </h4>
+      {followup?.date ? (
+        <div className="text-sm">
+          <div className="font-medium">{new Date(followup.date).toLocaleDateString()}</div>
+          <div className="text-xs text-muted-foreground">{followup.notes || 'Scheduled'}</div>
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">No follow-up scheduled</p>
+      )}
+    </Card>
+  );
+}
+
+function DoctorNotesCard({ patientId, notes, onUpdate }: { patientId: string; notes: any[]; onUpdate: () => void }) {
+  return (
+    <Card className="p-4">
+      <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
+        <FileText className="w-3 h-3" /> Notes
+      </h4>
+      {notes && notes.length > 0 ? (
+        <div className="text-xs text-muted-foreground space-y-1">
+          {notes.slice(0, 2).map((note: any, i: number) => (
+            <p key={i}>{note.text || note}</p>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">No notes yet</p>
+      )}
+    </Card>
   );
 }

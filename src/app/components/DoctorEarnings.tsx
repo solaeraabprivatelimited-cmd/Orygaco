@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Calendar, Download, CreditCard, ChevronLeft, ArrowUpRight, ArrowDownRight, Wallet, Info, AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
+import { DollarSign, TrendingUp, Calendar, Download, CreditCard, ChevronLeft, ArrowUpRight, ArrowDownRight, Wallet, Info, AlertCircle, FileText, CheckCircle2, Clock } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
 import { supabase } from '@/lib/supabase';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
 import { useAppNavigate } from '../hooks/useAppNavigate';
-
-interface DoctorEarningsProps {
-}
 
 export function DoctorEarnings() {
   const { navigate, goBack } = useAppNavigate();
@@ -376,3 +374,18 @@ export function DoctorEarnings() {
     </div>
   );
 }
+
+const mockTransactions = [
+  { id: '1', patient: 'Rajesh Kumar', type: 'In-person Consultation', amount: 800, status: 'completed', date: '2025-12-28', eta: '' },
+  { id: '2', patient: 'Priya Nair', type: 'Video Consultation', amount: 600, status: 'completed', date: '2025-12-27', eta: '' },
+  { id: '3', patient: 'Amit Patel', type: 'In-person Consultation', amount: 1000, status: 'pending', date: '2025-12-26', eta: '2 days' },
+  { id: '4', patient: 'Sunita Devi', type: 'Follow-up Visit', amount: 400, status: 'completed', date: '2025-12-25', eta: '' },
+  { id: '5', patient: 'Vikram Singh', type: 'Video Consultation', amount: 600, status: 'pending', date: '2025-12-24', eta: '3 days' },
+];
+
+const monthlyEarnings = [
+  { month: 'December 2025', earnings: 45200, consultations: 52 },
+  { month: 'November 2025', earnings: 38900, consultations: 45 },
+  { month: 'October 2025', earnings: 41500, consultations: 48 },
+  { month: 'September 2025', earnings: 35800, consultations: 40 },
+];

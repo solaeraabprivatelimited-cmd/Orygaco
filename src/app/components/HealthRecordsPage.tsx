@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Download, Search, Filter, ChevronLeft, Calendar, User, Pill, TestTube, Syringe, Heart, Eye, Share2, Upload } from 'lucide-react';
+import { Pill, Heart, Eye, ChevronLeft, Search, Filter, Download, Upload, Calendar, User, FileText, Share2, Syringe, TestTube } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
@@ -7,7 +7,17 @@ import { Input } from './ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface HealthRecordsPageProps {
+type ViewMode = 'list' | 'detail';
+type RecordType = 'prescription' | 'lab-report' | 'consultation' | 'vaccination' | 'imaging';
+
+interface HealthRecord {
+  id: string;
+  title: string;
+  type: RecordType;
+  date: string;
+  doctor: string;
+  hospital: string;
+  details?: any;
 }
 
 export function HealthRecordsPage() {
@@ -539,3 +549,68 @@ export function HealthRecordsPage() {
     </div>
   );
 }
+
+const mockRecords: HealthRecord[] = [
+  {
+    id: '1', title: 'Prescription - General Checkup', type: 'prescription',
+    date: '2025-12-20', doctor: 'Dr. Priya Sharma', hospital: 'Apollo Hospital, Mumbai',
+    details: {
+      diagnosis: 'Mild viral fever with body ache',
+      symptoms: 'Fever, headache, body ache, mild cough',
+      medications: [
+        { name: 'Paracetamol 500mg', dosage: '1 tablet', frequency: 'Twice a day', duration: '5 days', instructions: 'Take after meals' },
+        { name: 'Cetirizine 10mg', dosage: '1 tablet', frequency: 'Once at night', duration: '3 days', instructions: 'Take before sleep' },
+      ],
+      followUp: 'Visit again after 5 days if symptoms persist',
+      notes: 'Drink plenty of fluids. Rest recommended for 2-3 days.',
+    },
+  },
+  {
+    id: '2', title: 'Complete Blood Count (CBC)', type: 'lab-report',
+    date: '2025-12-15', doctor: 'Dr. Rajesh Menon', hospital: 'Max Healthcare, Delhi',
+    details: {
+      testName: 'Complete Blood Count', reportId: 'LAB-2025-4567',
+      tests: [
+        { parameter: 'Hemoglobin', value: '14.2', unit: 'g/dL', range: '13.0-17.0', status: 'normal' },
+        { parameter: 'WBC Count', value: '11200', unit: '/μL', range: '4500-11000', status: 'borderline' },
+        { parameter: 'Platelet Count', value: '245000', unit: '/μL', range: '150000-400000', status: 'normal' },
+      ],
+      summary: 'Overall blood counts are within normal range. Slightly elevated WBC count suggests mild infection.',
+      verifiedBy: 'Dr. S. Rao, MD Pathology',
+    },
+  },
+  {
+    id: '3', title: 'Cardiology Consultation', type: 'consultation',
+    date: '2025-11-28', doctor: 'Dr. Amit Shah', hospital: 'Fortis Hospital, Bangalore',
+    details: {
+      chiefComplaint: 'Occasional chest discomfort during exercise',
+      vitals: { BP: '128/82 mmHg', Pulse: '76 bpm', SpO2: '98%', Weight: '72 kg' },
+      examination: 'Heart sounds normal. No murmurs detected. ECG shows normal sinus rhythm.',
+      diagnosis: 'Exercise-induced chest tightness. Rule out GERD.',
+      treatment: 'Pantoprazole 40mg before breakfast for 2 weeks. Treadmill stress test recommended.',
+      advice: 'Continue moderate exercise. Avoid heavy meals before workouts. Follow up in 2 weeks with stress test results.',
+    },
+  },
+  {
+    id: '4', title: 'Influenza Vaccination', type: 'vaccination',
+    date: '2025-10-15', doctor: 'Dr. Sneha Verma', hospital: 'Medanta Hospital, Gurgaon',
+    details: {
+      vaccineName: 'Quadrivalent Influenza Vaccine 2025-26',
+      batchNo: 'FLU-2025-8901', manufacturer: 'Serum Institute of India',
+      site: 'Left deltoid (intramuscular)', nextDose: 'October 2026',
+      certificateNo: 'VAX-IN-2025-7890',
+      sideEffects: 'Mild soreness at injection site for 24 hours. No fever or other symptoms reported.',
+    },
+  },
+  {
+    id: '5', title: 'Chest X-Ray', type: 'imaging',
+    date: '2025-09-10', doctor: 'Dr. Kavita Desai', hospital: 'AIIMS, Delhi',
+    details: {
+      studyType: 'PA View Chest X-Ray', reportId: 'IMG-2025-3456',
+      indication: 'Persistent cough for 2 weeks',
+      findings: 'Both lung fields are clear. No consolidation or effusion. Heart size normal. Costophrenic angles clear.',
+      impression: 'Normal chest radiograph. No evidence of pulmonary pathology.',
+      radiologist: 'Dr. M. Singh, MD Radiology',
+    },
+  },
+];

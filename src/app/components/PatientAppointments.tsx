@@ -18,9 +18,6 @@ import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface PatientAppointmentsProps {
-}
-
 export function PatientAppointments() {
   const { navigate } = useAppNavigate();
   const [appointments, setAppointments] = useState<any[]>([]);

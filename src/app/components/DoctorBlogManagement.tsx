@@ -1,14 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Plus, FileText, CheckCircle, Edit2, Trash2, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, FileText, CheckCircle, Edit2, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { Card } from './ui/card';
+import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
+import { toast } from 'sonner';
 import { DoctorBlogEditor } from './DoctorBlogEditor';
 import { useAppNavigate } from '../hooks/useAppNavigate';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 
 interface Blog {
   id: string;
@@ -21,9 +31,6 @@ interface Blog {
   updatedAt: string;
   publishedAt?: string;
   reviewNotes?: string;
-}
-
-interface DoctorBlogManagementProps {
 }
 
 export function DoctorBlogManagement() {

@@ -17,8 +17,6 @@ import logo from 'figma:asset/79875bb7427953c37958c445f51a4ce2f3d7aa79.png';
 import { useAppNavigate } from '../hooks/useAppNavigate';
 import { useLocation } from 'react-router';
 
-interface BookingFlowProps {
-}
 
 type BookingStep = 'datetime' | 'type' | 'token' | 'patient' | 'details' | 'review' | 'payment' | 'confirmed';
 

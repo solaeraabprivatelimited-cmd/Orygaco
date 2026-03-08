@@ -10,9 +10,6 @@ import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { toast } from 'sonner';
 import { useAppNavigate } from '../hooks/useAppNavigate';
 
-interface PatientProfileProps {
-}
-
 export function PatientProfile() {
   const { navigate, goBack } = useAppNavigate();
   const [loading, setLoading] = useState(true);

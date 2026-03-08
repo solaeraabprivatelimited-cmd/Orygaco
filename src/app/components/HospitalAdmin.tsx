@@ -24,8 +24,6 @@ import { useAuth } from '../contexts/AuthContext';
 
 const HospitalProfileSettings = lazy(() => import('./hospital/HospitalProfileSettings').then(module => ({ default: module.HospitalProfileSettings })));
 
-interface HospitalAdminProps {
-}
 
 export function HospitalAdmin() {
   const { navigate } = useAppNavigate();
