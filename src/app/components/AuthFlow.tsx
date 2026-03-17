@@ -83,8 +83,7 @@ export function AuthFlow() {
         });
         
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Network error' }));
-            throw new Error(errorData.error || 'Failed to send OTP');
+            throw new Error('Verification failed');
         }
 
         const data = await response.json();
