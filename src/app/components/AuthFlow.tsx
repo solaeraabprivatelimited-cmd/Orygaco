@@ -98,7 +98,7 @@ export function AuthFlow() {
     }
   };
 
-  const handleVerifyOTP = async () => {
+ const handleVerifyOTP = async () => {
     setLoading(true);
     try {
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/auth/otp/verify`, {
