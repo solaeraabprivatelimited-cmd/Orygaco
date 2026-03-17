@@ -65,11 +65,21 @@ export function AuthFlow() {
 
   const [otp, setOtp] = useState('');
 
-  const handleSendOTP = async () => {
-    if (!formData.phone) {
-        toast.error("Please enter your mobile number");
+const handleVerifyOTP = () => {
+    if (otp !== '123456') {
+        toast.error("Invalid OTP. Use 123456");
         return;
     }
+    localStorage.setItem('authToken', 'dummy_token_' + formData.phone);
+    localStorage.setItem('user', JSON.stringify({
+        name: formData.phone,
+        mobile_number: formData.phone,
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
+    }));
+    localStorage.removeItem('isNewUser');
+    toast.success("Logged in successfully!");
+    window.location.href = '/dashboard';
+};
     setLoading(true);
     try {
         // Note: Using the specific server function name from the environment
