@@ -116,8 +116,7 @@ handleVerifyOTP = () =>
       });
 
       if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Verification failed' }));
-          throw new Error(errorData.error || 'Verification failed');
+          throw new Error('Verification failed');
       }
 
       const data = await response.json();
