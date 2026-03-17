@@ -60,7 +60,7 @@ export function DoctorProfile() {
       if (!session) return;
       
       const headers = { 'Authorization': `Bearer ${publicAnonKey}`, 'X-Supabase-Auth': session.access_token };
-      const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b`;
+      const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db`;
 
       // 1. Fetch Basic Profile
       const profileRes = await fetch(`${baseUrl}/doctor-profile`, { headers });
@@ -102,7 +102,7 @@ export function DoctorProfile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b`;
+      const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db`;
       const headers = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${publicAnonKey}`,
@@ -149,7 +149,7 @@ export function DoctorProfile() {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
           
-          const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b`;
+          const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db`;
           const res = await fetch(`${baseUrl}/doctor/credentials`, {
               method: 'POST',
               headers: {

@@ -45,7 +45,7 @@ export function HospitalProfileSettings() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
             const headers = { 'Authorization': `Bearer ${publicAnonKey}` };
-            const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-44966e3b`;
+            const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db`;
 
             const [resProfile, resSettings, resDepts, resDocs] = await Promise.all([
                 fetch(`${baseUrl}/hospital/profile?authToken=${session.access_token}`, { headers }),
@@ -72,7 +72,7 @@ export function HospitalProfileSettings() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
             
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital/profile`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital/profile`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({ authToken: session.access_token, ...profile })
@@ -93,7 +93,7 @@ export function HospitalProfileSettings() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
             
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital/settings`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital/settings`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({ 
@@ -120,7 +120,7 @@ export function HospitalProfileSettings() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
             
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital/departments`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital/departments`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({ authToken: session.access_token, departments })
@@ -142,7 +142,7 @@ export function HospitalProfileSettings() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
             
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital/documents`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital/documents`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({ 

@@ -33,7 +33,7 @@ export function HospitalProfile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital-profile?authToken=${session.access_token}`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital-profile?authToken=${session.access_token}`, {
         headers: {
           'Authorization': `Bearer ${publicAnonKey}`,
           'X-Supabase-Auth': session.access_token
@@ -71,7 +71,7 @@ export function HospitalProfile() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
 
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital-audit-logs?authToken=${session.access_token}`, {
+        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital-audit-logs?authToken=${session.access_token}`, {
             headers: {
                 'Authorization': `Bearer ${publicAnonKey}`,
                 'X-Supabase-Auth': session.access_token
@@ -92,7 +92,7 @@ export function HospitalProfile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital-profile-v2`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital-profile-v2`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

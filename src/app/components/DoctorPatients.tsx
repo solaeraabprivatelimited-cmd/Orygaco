@@ -30,7 +30,7 @@ export function DoctorPatients() {
           try {
               const { data: { session } } = await supabase.auth.getSession();
               if (!session) return;
-              const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/patients/index`, {
+              const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/patients/index`, {
                   headers: { 'Authorization': `Bearer ${publicAnonKey}`, 'X-Supabase-Auth': session.access_token }
               });
               if (res.ok) {
@@ -46,7 +46,7 @@ export function DoctorPatients() {
       try {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
-          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/patients/${id}/metadata`, {
+          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/patients/${id}/metadata`, {
               headers: { 'Authorization': `Bearer ${publicAnonKey}`, 'X-Supabase-Auth': session.access_token }
           });
           if (res.ok) {

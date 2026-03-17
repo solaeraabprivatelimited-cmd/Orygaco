@@ -30,17 +30,19 @@ export function PatientDashboard() {
   const [hospitals, setHospitals] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const heartRateData = [
-  { name: 'Mon', bpm: 72 },
-  { name: 'Tue', bpm: 68 },
-  { name: 'Wed', bpm: 75 },
-  { name: 'Thu', bpm: 71 },
-  { name: 'Fri', bpm: 78 },
-  { name: 'Sat', bpm: 65 },
-  { name: 'Sun', bpm: 70 },
-];
   const [careView, setCareView] = useState<'doctors' | 'hospitals'>('doctors');
   
+  // Heart rate chart data
+  const heartRateData = [
+    { name: 'Mon', bpm: 72 },
+    { name: 'Tue', bpm: 75 },
+    { name: 'Wed', bpm: 68 },
+    { name: 'Thu', bpm: 74 },
+    { name: 'Fri', bpm: 78 },
+    { name: 'Sat', bpm: 71 },
+    { name: 'Sun', bpm: 73 },
+  ];
+
   // Onboarding State
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingLoading, setOnboardingLoading] = useState(false);
@@ -82,7 +84,7 @@ export function PatientDashboard() {
                   full_name: onboardingData.full_name,
                   age: onboardingData.age,
                   gender: onboardingData.gender,
-                  email: onboardingData.email       
+                  email: onboardingData.email
               })
           });
           
@@ -408,14 +410,9 @@ export function PatientDashboard() {
                         <div className="h-[300px] w-full mt-4 pr-4">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={heartRateData}>
-                                    <defs>
-                                        <linearGradient id="colorBpm" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#E5285E" stopOpacity={0.1}/>
-                                            <stop offset="95%" stopColor="#E5285E" stopOpacity={0}/>
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <CartesianGrid key="grid" strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                     <XAxis 
+                                        key="xaxis"
                                         dataKey="name" 
                                         axisLine={false} 
                                         tickLine={false} 
@@ -423,20 +420,23 @@ export function PatientDashboard() {
                                         dy={10}
                                     />
                                     <YAxis 
+                                        key="yaxis"
                                         axisLine={false} 
                                         tickLine={false} 
                                         tick={{ fill: '#94a3b8', fontSize: 12 }} 
                                     />
                                     <Tooltip 
+                                        key="tooltip"
                                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                     />
                                     <Area 
+                                        key="area-bpm"
                                         type="monotone" 
                                         dataKey="bpm" 
                                         stroke="#E5285E" 
                                         strokeWidth={3}
                                         fillOpacity={1} 
-                                        fill="url(#colorBpm)" 
+                                        fill="url(#colorBpm-dashboard)" 
                                     />
                                 </AreaChart>
                             </ResponsiveContainer>

@@ -39,7 +39,7 @@ export function DoctorSchedule() {
 
               // 1. Buffer Rules
               if (featureFlags.autoBuffer) {
-                  fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/schedule/buffer-rules`, { headers })
+                  fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/schedule/buffer-rules`, { headers })
                     .then(res => res.json())
                     .then(data => setBufferRules(data))
                     .catch(err => console.error(err));
@@ -47,7 +47,7 @@ export function DoctorSchedule() {
 
               // 2. Insights
               if (featureFlags.slotInsights) {
-                  fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/schedule/insights`, { headers })
+                  fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/schedule/insights`, { headers })
                     .then(res => res.json())
                     .then(data => setSlotInsights(data))
                     .catch(err => console.error(err));
@@ -98,7 +98,7 @@ export function DoctorSchedule() {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
           
-          await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/schedule/buffer-rules`, {
+          await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/schedule/buffer-rules`, {
               method: 'POST',
               headers: { 
                   'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ export function DoctorSchedule() {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
           
-          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/schedule/emergency-slot`, {
+          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/schedule/emergency-slot`, {
               method: 'POST',
               headers: { 
                   'Content-Type': 'application/json',

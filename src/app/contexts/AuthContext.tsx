@@ -7,17 +7,22 @@ interface AuthContextType {
   isAuthenticated: boolean;
   userRole: UserRole;
   setUserRole: (role: UserRole) => void;
+  login: (role: UserRole) => void;
   logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const defaultAuthContext: AuthContextType = {
+  isAuthenticated: false,
+  userRole: 'guest',
+  setUserRole: () => {},
+  login: () => {},
+  logout: async () => {},
+};
+
+const AuthContext = createContext<AuthContextType>(defaultAuthContext);
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return useContext(AuthContext);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -80,6 +85,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const login = (role: UserRole) => {
+    setIsAuthenticated(true);
+    setUserRole(role);
+  };
+
   const logout = async () => {
     await supabase.auth.signOut();
     localStorage.removeItem('authToken');
@@ -90,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userRole, setUserRole, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, userRole, setUserRole, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

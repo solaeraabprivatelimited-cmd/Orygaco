@@ -85,7 +85,7 @@ export function TeleconsultPage({ appointmentId = 'mock-apt-1', patientId = 'moc
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
 
-          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/teleconsultation/start`, {
+          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/teleconsultation/start`, {
               method: 'POST',
               headers: { 
                   'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ export function TeleconsultPage({ appointmentId = 'mock-apt-1', patientId = 'moc
       try {
           const { data: { session } } = await supabase.auth.getSession();
           if (session && sessionId) {
-              await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/teleconsultation/end`, {
+              await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/teleconsultation/end`, {
                   method: 'PATCH',
                   headers: { 
                       'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ export function TeleconsultPage({ appointmentId = 'mock-apt-1', patientId = 'moc
       try {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
-          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor-notes/${appointmentId}`, {
+          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor-notes/${appointmentId}`, {
               headers: { 'Authorization': `Bearer ${publicAnonKey}`, 'X-Supabase-Auth': session.access_token }
           });
           if (res.ok) {
@@ -148,7 +148,7 @@ export function TeleconsultPage({ appointmentId = 'mock-apt-1', patientId = 'moc
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
           
-          await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor-notes/save`, {
+          await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor-notes/save`, {
               method: 'POST',
               headers: { 
                   'Content-Type': 'application/json',

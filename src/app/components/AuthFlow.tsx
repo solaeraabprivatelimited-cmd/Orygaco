@@ -6,7 +6,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-const logo = "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/Ot9IoDKZlYYU3v1pFUIw73/79875bb7427953c37958c445f51a4ce2f3d7aa79.png";import OrygaDNill from '../../imports/OrygaDNill';
+import logo from 'figma:asset/79875bb7427953c37958c445f51a4ce2f3d7aa79.png';
+import OrygaDNill from '../../imports/OrygaDNill';
 import OrygaPNill from '../../imports/OrygaPNill-226-129';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -20,7 +21,7 @@ type UserType = 'patient' | 'doctor' | 'hospital' | null;
 
 export function AuthFlow() {
   const { navigate } = useAppNavigate();
-  const { setUserRole } = useAuth();
+  const { login } = useAuth();
   const location = useLocation();
   
   // Derive initial user type and screen from URL path
@@ -65,21 +66,11 @@ export function AuthFlow() {
 
   const [otp, setOtp] = useState('');
 
-const handleVerifyOTP = () => {
-    if (otp !== '123456') {
-        toast.error("Invalid OTP. Use 123456");
+  const handleSendOTP = async () => {
+    if (!formData.phone) {
+        toast.error("Please enter your mobile number");
         return;
     }
-    localStorage.setItem('authToken', 'dummy_token_' + formData.phone);
-    localStorage.setItem('user', JSON.stringify({
-        name: formData.phone,
-        mobile_number: formData.phone,
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
-    }));
-    localStorage.removeItem('isNewUser');
-    toast.success("Logged in successfully!");
-    window.location.href = '/dashboard';
-};
     setLoading(true);
     try {
         // Note: Using the specific server function name from the environment
@@ -93,7 +84,8 @@ const handleVerifyOTP = () => {
         });
         
         if (!response.ok) {
-            throw new Error('Verification failed');
+            const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+            throw new Error(errorData.error || 'Failed to send OTP');
         }
 
         const data = await response.json();
@@ -107,7 +99,7 @@ const handleVerifyOTP = () => {
     }
   };
 
-const handleVerifyOTP = async () => {
+  const handleVerifyOTP = async () => {
       setLoading(true);
       try {
         const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/auth/otp/verify`, {
@@ -120,90 +112,8 @@ const handleVerifyOTP = async () => {
         });
 
         if (!response.ok) {
-            throw new Error('Verification failed');
-        }
-
-        const data = await response.json();
-        
-        if (data.session?.access_token) {
-            localStorage.setItem('authToken', data.session.access_token);
-            localStorage.setItem('user', JSON.stringify({
-              ...data.user,
-              name: data.user?.mobile_number || formData.phone,
-              avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
-            }));
-            
-            if (data.isNewUser) {
-                localStorage.setItem('isNewUser', 'true');
-            } else {
-                localStorage.removeItem('isNewUser');
-            }
-            
-            toast.success("Logged in successfully!");
-            window.location.href = '/dashboard';
-        } else {
-            toast.error(data.error || "Verification failed");
-        }
-      } catch (e: any) {
-          console.error(e);
-          toast.error(e.message || "Verification failed");
-      } finally {
-          setLoading(false);
-      }
-  };
-  ```
-
-To be 100% sure you're on the right line, the function starts right after `handleSendOTP` ends. You can use **Ctrl+F** and search for exactly:
-```
-handleVerifyOTP = () =>
-    setLoading(true);
-    try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/auth/otp/verify`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${publicAnonKey}`
-          },
-          body: JSON.stringify({ mobile_number: formData.phone, otp })
-      });
-
-      if (!response.ok) {
-          throw new Error('Verification failed');
-      }
-
-      const data = await response.json();
-      
-      if (data.session?.access_token) {
-          // Store auth token
-          localStorage.setItem('authToken', data.session.access_token);
-          localStorage.setItem('user', JSON.stringify({
-            ...data.user,
-            name: data.user?.mobile_number || formData.phone,
-            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
-          }));
-          
-          if (data.isNewUser) {
-              localStorage.setItem('isNewUser', 'true');
-          } else {
-              localStorage.removeItem('isNewUser');
-          }
-          
-          toast.success("Logged in successfully!");
-          
-          // Force a full page navigation to /dashboard so the app re-reads localStorage
-          window.location.href = '/dashboard';
-      } else {
-          toast.error(data.error || "Verification failed");
-      }
-    } catch (e: any) {
-        console.error(e);
-        toast.error(e.message || "Verification failed");
-    } finally {
-        setLoading(false);
-    }
-};
-        if (!response.ok) {
-           const errorData = { error: 'Verification failed' };
+            const errorData = await response.json().catch(() => ({ error: 'Verification failed' }));
+            throw new Error(errorData.error || 'Verification failed');
         }
 
         const data = await response.json();
@@ -220,6 +130,7 @@ handleVerifyOTP = () =>
             }
             
             toast.success("Logged in successfully");
+            login((data.user?.role || 'patient') as any);
             navigate('patient-app'); 
         } else {
             toast.error(data.error || "Verification failed");
@@ -323,6 +234,9 @@ handleVerifyOTP = () =>
       
       // Small additional delay to ensure all state updates are processed
       await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // CRITICAL: Set auth state synchronously before navigating
+      login(role as any);
       
       // Navigate based on role
       if (role === 'patient') {
@@ -486,6 +400,10 @@ handleVerifyOTP = () =>
       }
 
       toast.success('Account created successfully!');
+      
+      // CRITICAL: Set auth state synchronously before navigating
+      const signupRole = userType || 'patient';
+      login(signupRole as any);
       
       // Determine next step based on user type
       if (userType === 'patient') {

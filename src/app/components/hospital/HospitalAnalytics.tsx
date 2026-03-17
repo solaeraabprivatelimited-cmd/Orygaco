@@ -35,10 +35,10 @@ export function HospitalAnalytics() {
 
             // Parallel Fetch
             const [overviewRes, funnelRes] = await Promise.all([
-                fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/analytics/hospital/overview?date=${date}&authToken=${session.access_token}`, {
+                fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/analytics/hospital/overview?date=${date}&authToken=${session.access_token}`, {
                      headers: { 'Authorization': `Bearer ${publicAnonKey}` }
                 }),
-                fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/analytics/hospital/funnel?date=${date}&authToken=${session.access_token}`, {
+                fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/analytics/hospital/funnel?date=${date}&authToken=${session.access_token}`, {
                      headers: { 'Authorization': `Bearer ${publicAnonKey}` }
                 })
             ]);

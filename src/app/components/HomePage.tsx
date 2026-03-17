@@ -3,9 +3,8 @@ import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
-const doctorImage = "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/Ot9IoDKZlYYU3v1pFUIw73/41a844b33bd9b451dfff73880eb0e6924dbe37b0.png"
+import doctorHeroImage from 'figma:asset/41a844b33bd9b451dfff73880eb0e6924dbe37b0.png';
 import { useAppNavigate } from '../hooks/useAppNavigate';
-const doctorHeroImage = "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/src/assets/41a844b33bd9b451dfff73880eb0e6924dbe37b0.png";
 
 export function HomePage() {
   const { navigate } = useAppNavigate();

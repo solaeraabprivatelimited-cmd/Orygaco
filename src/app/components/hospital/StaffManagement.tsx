@@ -51,7 +51,7 @@ export function StaffManagement() {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/staff?authToken=${session.access_token}`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/staff?authToken=${session.access_token}`, {
                 headers: { 'Authorization': `Bearer ${publicAnonKey}` }
             });
             if (res.ok) {
@@ -65,7 +65,7 @@ export function StaffManagement() {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/admin/staff/performance?authToken=${session.access_token}`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/admin/staff/performance?authToken=${session.access_token}`, {
                 headers: { 'Authorization': `Bearer ${publicAnonKey}` }
             });
             if (res.ok) {
@@ -79,7 +79,7 @@ export function StaffManagement() {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/admin/staff/${id}/details?authToken=${session.access_token}`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/admin/staff/${id}/details?authToken=${session.access_token}`, {
                 headers: { 'Authorization': `Bearer ${publicAnonKey}` }
             });
             if (res.ok) {
@@ -93,7 +93,7 @@ export function StaffManagement() {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/staff`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/staff`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({
@@ -118,7 +118,7 @@ export function StaffManagement() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
             
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/admin/staff/${selectedStaff.id}/permissions`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/admin/staff/${selectedStaff.id}/permissions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({
@@ -140,7 +140,7 @@ export function StaffManagement() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
             
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/admin/staff/${selectedStaff.id}/elevate`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/admin/staff/${selectedStaff.id}/elevate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({
@@ -166,7 +166,7 @@ export function StaffManagement() {
             const currentShifts = staffDetails?.shifts || [];
             const newShifts = [...currentShifts, { ...shift, id: crypto.randomUUID(), createdAt: new Date().toISOString() }];
 
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/admin/staff/${selectedStaff.id}/shifts`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/admin/staff/${selectedStaff.id}/shifts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({
@@ -187,7 +187,7 @@ export function StaffManagement() {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/staff/${id}?authToken=${session.access_token}`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/staff/${id}?authToken=${session.access_token}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${publicAnonKey}` }
             });

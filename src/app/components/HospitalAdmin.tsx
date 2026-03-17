@@ -133,7 +133,7 @@ export function HospitalAdmin() {
 
   async function fetchLogs(id: string) {
       try {
-          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/appointment-logs/${id}`);
+          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/appointment-logs/${id}`);
           if (response.ok) {
               setAppointmentLogs(await response.json());
           }
@@ -183,7 +183,7 @@ export function HospitalAdmin() {
       try {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
-          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/opd-day-status?date=${date}&authToken=${session.access_token}`, {
+          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/opd-day-status?date=${date}&authToken=${session.access_token}`, {
               headers: { 
                  'Authorization': `Bearer ${publicAnonKey}`,
                  'X-Supabase-Auth': session.access_token 
@@ -202,7 +202,7 @@ export function HospitalAdmin() {
       try {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
-          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/opd-day-status`, {
+          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/opd-day-status`, {
               method: 'POST',
               headers: { 
                  'Content-Type': 'application/json',
@@ -236,7 +236,7 @@ export function HospitalAdmin() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
 
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/advanced-dashboard-stats`, {
+        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/advanced-dashboard-stats`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -263,7 +263,7 @@ export function HospitalAdmin() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital-profile?authToken=${session.access_token}`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital-profile?authToken=${session.access_token}`, {
          headers: { 
              'Authorization': `Bearer ${publicAnonKey}`,
              'X-Supabase-Auth': session.access_token 
@@ -322,7 +322,7 @@ export function HospitalAdmin() {
         }
         
         const doFetch = async (authToken: string) => {
-             return fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital-stats`, {
+             return fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital-stats`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -424,7 +424,7 @@ export function HospitalAdmin() {
       console.log('Fetching slots for:', date);
       
       const doFetch = async (authToken: string) => {
-          return fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/get-slots`, {
+          return fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/get-slots`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -512,7 +512,7 @@ export function HospitalAdmin() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital-profile`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital-profile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -544,7 +544,7 @@ export function HospitalAdmin() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital-doctors?authToken=${session.access_token}`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital-doctors?authToken=${session.access_token}`, {
          headers: { 
              'Authorization': `Bearer ${publicAnonKey}`,
              'X-Supabase-Auth': session.access_token 
@@ -581,7 +581,7 @@ export function HospitalAdmin() {
           return;
       }
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital-doctors`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital-doctors`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -641,7 +641,7 @@ export function HospitalAdmin() {
        const { data: { session } } = await supabase.auth.getSession();
        if (!session) return;
 
-       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital-doctors/${id}?authToken=${session.access_token}`, {
+       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital-doctors/${id}?authToken=${session.access_token}`, {
           method: 'DELETE',
           headers: { 
               'Authorization': `Bearer ${publicAnonKey}`,
@@ -703,7 +703,7 @@ export function HospitalAdmin() {
       let token = session.access_token;
       
       const performCreate = async (authToken: string) => {
-          return fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/slots`, {
+          return fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/slots`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -770,7 +770,7 @@ export function HospitalAdmin() {
         if (isConflict) {
             // If it's a conflict, prompt the user to overwrite
             if (confirm("Slots already exist for this date. Do you want to clear them and generate new ones?")) {
-                const deleteResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/slots?date=${slotForm.date}&authToken=${token}`, {
+                const deleteResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/slots?date=${slotForm.date}&authToken=${token}`, {
                     method: 'DELETE',
                     headers: { 
                         'Authorization': `Bearer ${publicAnonKey}`,
@@ -824,7 +824,7 @@ export function HospitalAdmin() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/slots/${slotId}`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/slots/${slotId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -861,7 +861,7 @@ export function HospitalAdmin() {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
 
-          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/slots/${slotId}/${action}?date=${selectedDate}`, {
+          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/slots/${slotId}/${action}?date=${selectedDate}`, {
               method: 'POST',
               headers: { 
                   'Content-Type': 'application/json',
@@ -889,7 +889,7 @@ export function HospitalAdmin() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/slots/${slotId}?date=${selectedDate}&authToken=${session.access_token}`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/slots/${slotId}?date=${selectedDate}&authToken=${session.access_token}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${publicAnonKey}`,
@@ -923,7 +923,7 @@ export function HospitalAdmin() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/slots?date=${selectedDate}&authToken=${session.access_token}`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/slots?date=${selectedDate}&authToken=${session.access_token}`, {
          method: 'DELETE',
          headers: { 
              'Authorization': `Bearer ${publicAnonKey}`,
@@ -952,7 +952,7 @@ export function HospitalAdmin() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/mark-day-completed`, {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/mark-day-completed`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -1097,7 +1097,7 @@ export function HospitalAdmin() {
       }
       
       toast.promise(
-        fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/admin/secure-export`, {
+        fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/admin/secure-export`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -1509,7 +1509,7 @@ export function HospitalAdmin() {
                                                                                    toast.dismiss();
                                                                                    toast.loading("Booking...");
 
-                                                                                   const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/bookings?authToken=${session.access_token}`, {
+                                                                                   const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/bookings?authToken=${session.access_token}`, {
                                                                                        method: 'POST',
                                                                                        headers: {
                                                                                            'Content-Type': 'application/json',
@@ -2178,7 +2178,7 @@ export function HospitalAdmin() {
                                                           const { data: { session } } = await supabase.auth.getSession();
                                                           if (!session) return;
                                                           
-                                                          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/get-slots`, {
+                                                          const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/get-slots`, {
                                                               method: 'POST',
                                                               headers: {
                                                                   'Content-Type': 'application/json',
@@ -2224,7 +2224,7 @@ export function HospitalAdmin() {
 
                                                              const toastId = toast.loading("Rescheduling...");
                                                              try {
-                                                                  const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/reschedule-appointment`, {
+                                                                  const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/reschedule-appointment`, {
                                                                       method: 'POST',
                                                                       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}`, 'X-Supabase-Auth': session.access_token },
                                                                       body: JSON.stringify({
@@ -2369,7 +2369,7 @@ export function HospitalAdmin() {
                                     
                                     const toastId = toast.loading("Updating...");
                                     try {
-                                        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/update-appointment-status`, {
+                                        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/update-appointment-status`, {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}`, 'X-Supabase-Auth': session.access_token },
                                             body: JSON.stringify({ authToken: session.access_token, appointmentId: selectedAppointment.id, status: 'no_show' })
@@ -2396,7 +2396,7 @@ export function HospitalAdmin() {
                                 
                                 const toastId = toast.loading("Completing appointment...");
                                 try {
-                                    const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/update-appointment-status`, {
+                                    const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/update-appointment-status`, {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}`, 'X-Supabase-Auth': session.access_token },
                                         body: JSON.stringify({ authToken: session.access_token, appointmentId: selectedAppointment.id, status: 'completed' })
@@ -2749,7 +2749,7 @@ export function HospitalAdmin() {
                                  if(!session) return;
                                  const toastId = toast.loading("Finding slots...");
                                  try {
-                                     const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/get-slots`, {
+                                     const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/get-slots`, {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}`, 'X-Supabase-Auth': session.access_token },
                                         body: JSON.stringify({ authToken: session.access_token, date: rescheduleDate, hospitalId: session.user.id })
@@ -2781,7 +2781,7 @@ export function HospitalAdmin() {
                                             
                                             const toastId = toast.loading("Rescheduling...");
                                             try {
-                                                const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/reschedule-appointment`, {
+                                                const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/reschedule-appointment`, {
                                                     method: 'POST',
                                                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}`, 'X-Supabase-Auth': session.access_token },
                                                     body: JSON.stringify({ 

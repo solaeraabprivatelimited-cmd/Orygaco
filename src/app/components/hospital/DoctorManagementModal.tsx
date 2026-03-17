@@ -131,7 +131,7 @@ export function DoctorManagementModal({ isOpen, onClose, doctor, onSuccess, hosp
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/verification/${doctorId}?authToken=${session.access_token}`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/verification/${doctorId}?authToken=${session.access_token}`, {
                 headers: { 'Authorization': `Bearer ${publicAnonKey}` }
             });
             if (res.ok) {
@@ -145,7 +145,7 @@ export function DoctorManagementModal({ isOpen, onClose, doctor, onSuccess, hosp
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/financial-config/${doctorId}?authToken=${session.access_token}`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/financial-config/${doctorId}?authToken=${session.access_token}`, {
                 headers: { 'Authorization': `Bearer ${publicAnonKey}` }
             });
             if (res.ok) {
@@ -161,7 +161,7 @@ export function DoctorManagementModal({ isOpen, onClose, doctor, onSuccess, hosp
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/verification/update`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/verification/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({
@@ -183,7 +183,7 @@ export function DoctorManagementModal({ isOpen, onClose, doctor, onSuccess, hosp
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/financial-config`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/financial-config`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({
@@ -202,7 +202,7 @@ export function DoctorManagementModal({ isOpen, onClose, doctor, onSuccess, hosp
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor-shifts?doctorId=${doctorId}&authToken=${session.access_token}`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor-shifts?doctorId=${doctorId}&authToken=${session.access_token}`, {
                 headers: { 'Authorization': `Bearer ${publicAnonKey}` }
             });
             if (res.ok) {
@@ -216,7 +216,7 @@ export function DoctorManagementModal({ isOpen, onClose, doctor, onSuccess, hosp
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor-leaves?doctorId=${doctorId}&authToken=${session.access_token}`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor-leaves?doctorId=${doctorId}&authToken=${session.access_token}`, {
                 headers: { 'Authorization': `Bearer ${publicAnonKey}` }
             });
             if (res.ok) {
@@ -230,7 +230,7 @@ export function DoctorManagementModal({ isOpen, onClose, doctor, onSuccess, hosp
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor-metrics`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor-metrics`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({ authToken: session.access_token, doctorId })
@@ -252,7 +252,7 @@ export function DoctorManagementModal({ isOpen, onClose, doctor, onSuccess, hosp
                 hospitalId
             };
 
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/hospital-doctors`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/hospital-doctors`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify(payload)
@@ -282,7 +282,7 @@ export function DoctorManagementModal({ isOpen, onClose, doctor, onSuccess, hosp
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor-shifts`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor-shifts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({
@@ -309,7 +309,7 @@ export function DoctorManagementModal({ isOpen, onClose, doctor, onSuccess, hosp
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor-leaves`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor-leaves`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({
@@ -342,7 +342,7 @@ export function DoctorManagementModal({ isOpen, onClose, doctor, onSuccess, hosp
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
-            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/verify-doctor`, {
+            const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/verify-doctor`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${publicAnonKey}` },
                 body: JSON.stringify({

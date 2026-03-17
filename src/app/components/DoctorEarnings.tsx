@@ -23,7 +23,7 @@ export function DoctorEarnings() {
               const { data: { session } } = await supabase.auth.getSession();
               if (!session) return;
               
-              const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/finance/summary`, {
+              const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/finance/summary`, {
                   headers: { 'Authorization': `Bearer ${publicAnonKey}`, 'X-Supabase-Auth': session.access_token }
               });
               
@@ -40,7 +40,7 @@ export function DoctorEarnings() {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
 
-          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/finance/withdraw`, {
+          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/finance/withdraw`, {
               method: 'POST',
               headers: { 
                   'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export function DoctorEarnings() {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
 
-          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-44966e3b/doctor/finance/statement`, {
+          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctor/finance/statement`, {
               method: 'POST',
               headers: { 
                   'Content-Type': 'application/json',
