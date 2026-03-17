@@ -30,6 +30,15 @@ export function PatientDashboard() {
   const [hospitals, setHospitals] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const heartRateData = [
+  { name: 'Mon', bpm: 72 },
+  { name: 'Tue', bpm: 68 },
+  { name: 'Wed', bpm: 75 },
+  { name: 'Thu', bpm: 71 },
+  { name: 'Fri', bpm: 78 },
+  { name: 'Sat', bpm: 65 },
+  { name: 'Sun', bpm: 70 },
+];
   const [careView, setCareView] = useState<'doctors' | 'hospitals'>('doctors');
   
   // Onboarding State
@@ -73,7 +82,7 @@ export function PatientDashboard() {
                   full_name: onboardingData.full_name,
                   age: onboardingData.age,
                   gender: onboardingData.gender,
-                  email: onboardingData.email
+                  email: onboardingData.email       
               })
           });
           
