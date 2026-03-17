@@ -98,7 +98,12 @@ export function AuthFlow() {
     }
   };
 
- const handleVerifyOTP = async () => {
+const handleVerifyOTP = async () => {
+```
+
+To be 100% sure you're on the right line, the function starts right after `handleSendOTP` ends. You can use **Ctrl+F** and search for exactly:
+```
+handleVerifyOTP = () =>
     setLoading(true);
     try {
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/auth/otp/verify`, {
