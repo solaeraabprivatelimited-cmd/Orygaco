@@ -8,7 +8,7 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ORYAContainer } from '../components/orya/ORYAContainer';
 import { useAppNavigate, pathToView } from '../hooks/useAppNavigate';
 import { User } from 'lucide-react';
-import logo from 'figma:asset/79875bb7427953c37958c445f51a4ce2f3d7aa79.png';
+import logo from 'src/assets/79875bb7427953c37958c445f51a4ce2f3d7aa79.png';
 
 function ORYARouteSync() {
   const { setContext } = useORYA();
