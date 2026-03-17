@@ -99,17 +99,53 @@ export function AuthFlow() {
   };
 
   const handleVerifyOTP = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/auth/otp/verify`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${publicAnonKey}`
-            },
-            body: JSON.stringify({ mobile_number: formData.phone, otp })
-        });
+    setLoading(true);
+    try {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/auth/otp/verify`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${publicAnonKey}`
+          },
+          body: JSON.stringify({ mobile_number: formData.phone, otp })
+      });
 
+      if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Verification failed' }));
+          throw new Error(errorData.error || 'Verification failed');
+      }
+
+      const data = await response.json();
+      
+      if (data.session?.access_token) {
+          // Store auth token
+          localStorage.setItem('authToken', data.session.access_token);
+          localStorage.setItem('user', JSON.stringify({
+            ...data.user,
+            name: data.user?.mobile_number || formData.phone,
+            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
+          }));
+          
+          if (data.isNewUser) {
+              localStorage.setItem('isNewUser', 'true');
+          } else {
+              localStorage.removeItem('isNewUser');
+          }
+          
+          toast.success("Logged in successfully!");
+          
+          // Force a full page navigation to /dashboard so the app re-reads localStorage
+          window.location.href = '/dashboard';
+      } else {
+          toast.error(data.error || "Verification failed");
+      }
+    } catch (e: any) {
+        console.error(e);
+        toast.error(e.message || "Verification failed");
+    } finally {
+        setLoading(false);
+    }
+};
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: 'Verification failed' }));
             throw new Error(errorData.error || 'Verification failed');
