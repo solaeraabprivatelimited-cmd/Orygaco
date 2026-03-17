@@ -99,7 +99,7 @@ export function AuthFlow() {
   };
 
 const handleVerifyOTP = async () => {
-```
+  ```
 
 To be 100% sure you're on the right line, the function starts right after `handleSendOTP` ends. You can use **Ctrl+F** and search for exactly:
 ```
@@ -151,8 +151,7 @@ handleVerifyOTP = () =>
     }
 };
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Verification failed' }));
-            throw new Error(errorData.error || 'Verification failed');
+           const errorData = await response.json().catch(() => ({ error: 'Verification failed' } as {error: string}));
         }
 
         const data = await response.json();
