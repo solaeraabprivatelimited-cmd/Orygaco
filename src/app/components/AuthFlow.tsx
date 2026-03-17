@@ -203,7 +203,7 @@ handleVerifyOTP = () =>
     }
 };
         if (!response.ok) {
-           const errorData = await response.json().catch(() => ({ error: 'Verification failed' } as {error: string}));
+           const errorData = { error: 'Verification failed' };
         }
 
         const data = await response.json();
