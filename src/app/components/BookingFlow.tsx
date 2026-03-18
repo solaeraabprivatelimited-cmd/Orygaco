@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Video, MapPin, User, Users, FileText, CreditCard, Check, ChevronLeft, Phone, AlertCircle, Shield, Hash } from 'lucide-react';
+import { Calendar, Clock, Video, MapPin, User, Users, FileText, CreditCard, Check, ChevronLeft, Phone, AlertCircle, Shield, Hash, XCircle } from 'lucide-react';
 import { Calendar as CalendarComponent } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format } from 'date-fns';
@@ -15,33 +15,36 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Label } from './ui/label';
 import logo from 'figma:asset/79875bb7427953c37958c445f51a4ce2f3d7aa79.png';
 import { useAppNavigate } from '../hooks/useAppNavigate';
-import { useLocation } from 'react-router';
+import { useLocation, useSearchParams } from 'react-router';
 
 
 type BookingStep = 'datetime' | 'type' | 'token' | 'patient' | 'details' | 'review' | 'payment' | 'confirmed';
 
-const defaultMockDoctor = {
-  id: "1",
-  name: "Dr. Priya Sharma",
-  specialty: "Cardiologist",
-  experience: "15 years",
-  rating: 4.8,
-  reviews: 234,
-  location: "Mumbai, Maharashtra",
-  hospital: "Apollo Hospital",
-  consultationFee: 800,
-  image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400"
-};
-
-
-
+// BookingFlow - requires doctor data passed via navigation state
 export function BookingFlow() {
   const { navigate, goBack } = useAppNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [familyMembers, setFamilyMembers] = useState<{ id: string; name: string; relation: string; age: string }[]>([]);
   
-  // Use location state if available, otherwise fallback
-  const doctor = location.state || defaultMockDoctor;
+  // Use location state, with fallback to fetch by doctorId query param
+  const [doctor, setDoctor] = useState<any>(location.state || null);
+  const [loadingDoctor, setLoadingDoctor] = useState(!location.state && !!searchParams.get('doctorId'));
+
+  // Fallback: fetch doctor by ID if state was lost (e.g. page refresh)
+  useEffect(() => {
+    if (doctor) return;
+    const doctorId = searchParams.get('doctorId');
+    if (!doctorId) return;
+    setLoadingDoctor(true);
+    fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/doctors/${doctorId}`, {
+      headers: { 'Authorization': `Bearer ${publicAnonKey}` }
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setDoctor(data); })
+      .catch(e => console.error('Failed to fetch doctor for booking:', e))
+      .finally(() => setLoadingDoctor(false));
+  }, [searchParams, doctor]);
 
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [newMember, setNewMember] = useState({ name: '', relation: '', age: '' });
@@ -63,10 +66,10 @@ export function BookingFlow() {
 
   // Fetch slots when date changes
   useEffect(() => {
-    if (selectedDate) {
+    if (selectedDate && doctor?.id) {
       fetchSlots(selectedDate);
     }
-  }, [selectedDate]);
+  }, [selectedDate, doctor?.id]);
 
   // Fetch patients when entering patient step
   useEffect(() => {
@@ -78,9 +81,13 @@ export function BookingFlow() {
   const fetchPatients = async () => {
     setIsLoadingPatients(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const customToken = localStorage.getItem('authToken');
-      const token = session?.access_token || customToken;
+      let sbToken: string | null = null;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        sbToken = session?.access_token || null;
+      } catch (e) { /* custom auth user */ }
+      const token = customToken || sbToken;
       
       if (!token) return;
 
@@ -101,13 +108,21 @@ export function BookingFlow() {
   };
 
   const fetchSlots = async (date: string) => {
+    if (!doctor?.id) return;
     setIsLoadingSlots(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Prioritize custom auth token, then Supabase session
       const customToken = localStorage.getItem('authToken');
+      let sbToken: string | null = null;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        sbToken = session?.access_token || null;
+      } catch (e) {
+        console.log('Supabase session check skipped (custom auth user)');
+      }
       
-      // Use token from session or custom auth
-      const token = session?.access_token || customToken;
+      // Use token from custom auth or session
+      const token = customToken || sbToken;
       
       // Use publicAnonKey for Authorization header (to pass Gateway)
       // Pass User Token in X-Supabase-Auth (for Server)
@@ -184,11 +199,20 @@ export function BookingFlow() {
         grouped.afternoon.sort((a, b) => getTimeVal(a.time) - getTimeVal(b.time));
         grouped.evening.sort((a, b) => getTimeVal(a.time) - getTimeVal(b.time));
 
+        if (slots.length === 0) {
+          toast.info("No slots available for this date. The hospital hasn't published slots yet.");
+        }
+
         setAvailableSlots(grouped);
+      } else {
+        console.error("Slots API error:", response.status, await response.text().catch(() => ''));
+        setAvailableSlots({ morning: [], afternoon: [], evening: [] });
+        toast.error("Could not load slots. Please try again later.");
       }
     } catch (error) {
       console.error("Error fetching slots:", error);
-      toast.error("Could not load available slots");
+      setAvailableSlots({ morning: [], afternoon: [], evening: [] });
+      toast.error("Could not load slots. Please try again later.");
     } finally {
       setIsLoadingSlots(false);
     }
@@ -198,9 +222,13 @@ export function BookingFlow() {
     if (newMember.name && newMember.relation && newMember.age) {
       setIsLoadingPatients(true);
       try {
-          const { data: { session } } = await supabase.auth.getSession();
           const customToken = localStorage.getItem('authToken');
-          const token = session?.access_token || customToken;
+          let sbToken: string | null = null;
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            sbToken = session?.access_token || null;
+          } catch (e) { /* custom auth user */ }
+          const token = customToken || sbToken;
 
           if (!token) {
              toast.error("Please sign in to add members");
@@ -252,17 +280,22 @@ export function BookingFlow() {
     try {
       setIsBooking(true);
       
-      // ✅ Step 1: Always refresh/get session before booking
-      let { data: { session } } = await supabase.auth.getSession();
+      // Get auth token - prioritize custom auth, then Supabase session
+      const customToken = localStorage.getItem('authToken');
+      let sbAccessToken: string | null = null;
       
-      if (!session) {
-         // Try one explicit refresh if session is missing/null
-         const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
-         session = refreshedSession;
+      try {
+        let { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+          session = refreshedSession;
+        }
+        sbAccessToken = session?.access_token || null;
+      } catch (e) {
+        console.log('Supabase session check skipped (custom auth user)');
       }
 
-      const customToken = localStorage.getItem('authToken');
-      const accessToken = session?.access_token || customToken;
+      const accessToken = customToken || sbAccessToken;
 
       if (!accessToken) {
         toast.error('Please sign in to book an appointment');
@@ -329,7 +362,15 @@ export function BookingFlow() {
       // Handle 401 / Invalid JWT from Gateway by refreshing session (Safety Net)
       if (response.status === 401) {
          console.log("Booking: Received 401, attempting to refresh session...");
-         const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+         let refreshedSession: any = null;
+         let refreshError: any = null;
+         try {
+           const result = await supabase.auth.refreshSession();
+           refreshedSession = result.data?.session;
+           refreshError = result.error;
+         } catch (e) {
+           console.log("Supabase refresh failed (custom auth user):", e);
+         }
          
          if (refreshedSession && !refreshError) {
             const newAccessToken = refreshedSession.access_token;
@@ -426,6 +467,38 @@ export function BookingFlow() {
   };
 
   const dates = getNextDays(7);
+
+  // Auto-select first date on mount so slots load immediately
+  useEffect(() => {
+    if (!selectedDate && dates.length > 0) {
+      setSelectedDate(dates[0].date);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show loading while fetching doctor by ID
+  if (loadingDoctor) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If no doctor data was passed via navigation, show error
+  if (!doctor || !doctor.id) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4 p-4">
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 mx-auto bg-red-50 rounded-full flex items-center justify-center">
+            <XCircle className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-xl font-semibold text-slate-900">No Doctor Selected</h2>
+          <p className="text-sm text-slate-500 max-w-sm">Please select a doctor from the available list to proceed with booking.</p>
+          <Button onClick={() => navigate('book-doctor')} className="mt-4">Browse Doctors</Button>
+        </div>
+      </div>
+    );
+  }
 
   if (currentStep === 'confirmed') {
     return (
@@ -713,8 +786,19 @@ export function BookingFlow() {
                         </div>
                       </div>
                       
+                      {/* No Slots Empty State */}
+                      {!isLoadingSlots && availableSlots.morning.length === 0 && availableSlots.afternoon.length === 0 && availableSlots.evening.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-12 px-6 bg-amber-50/50 border border-amber-200 rounded-xl text-center">
+                          <AlertCircle className="w-10 h-10 text-amber-500 mb-3" />
+                          <h4 className="font-semibold text-base text-amber-800 mb-1">No Slots Available</h4>
+                          <p className="text-sm text-amber-700 max-w-sm">
+                            The hospital hasn't published any slots for this date. Please try a different date or contact the hospital directly.
+                          </p>
+                        </div>
+                      )}
+
                       {/* Morning Slots */}
-                      <div>
+                      {availableSlots.morning.length > 0 && <div>
                         <div className="flex items-center gap-3 mb-4">
                           <div className="px-2 py-1 rounded-md bg-orange-100/50 text-orange-700 text-xs font-medium border border-orange-200">
                             Morning
@@ -724,8 +808,8 @@ export function BookingFlow() {
                           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                             {availableSlots.morning.map((slot, idx) => {
                               const tokenNum = idx + 1;
-                              const isSelected = slot.status === 'available' && selectedTime === slot.time;
                               const isBooked = slot.status === 'booked';
+                              const isSelected = !isBooked && selectedTime === slot.time;
                               
                               return (
                                 <button
@@ -767,10 +851,10 @@ export function BookingFlow() {
                               );
                             })}
                           </div>
-                      </div>
+                      </div>}
 
                       {/* Afternoon Slots */}
-                      <div>
+                      {availableSlots.afternoon.length > 0 && <div>
                         <div className="flex items-center gap-3 mb-4">
                           <div className="px-2 py-1 rounded-md bg-blue-100/50 text-blue-700 text-xs font-medium border border-blue-200">
                             Afternoon
@@ -780,8 +864,8 @@ export function BookingFlow() {
                           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                             {availableSlots.afternoon.map((slot, idx) => {
                               const tokenNum = availableSlots.morning.length + idx + 1;
-                              const isSelected = slot.status === 'available' && selectedTime === slot.time;
                               const isBooked = slot.status === 'booked';
+                              const isSelected = !isBooked && selectedTime === slot.time;
 
                               return (
                                 <button
@@ -823,10 +907,10 @@ export function BookingFlow() {
                               );
                             })}
                           </div>
-                      </div>
+                      </div>}
 
                       {/* Evening Slots */}
-                      <div>
+                      {availableSlots.evening.length > 0 && <div>
                         <div className="flex items-center gap-3 mb-4">
                           <div className="px-2 py-1 rounded-md bg-indigo-100/50 text-indigo-700 text-xs font-medium border border-indigo-200">
                             Evening
@@ -836,8 +920,8 @@ export function BookingFlow() {
                           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                             {availableSlots.evening.map((slot, idx) => {
                               const tokenNum = availableSlots.morning.length + availableSlots.afternoon.length + idx + 1;
-                              const isSelected = slot.status === 'available' && selectedTime === slot.time;
                               const isBooked = slot.status === 'booked';
+                              const isSelected = !isBooked && selectedTime === slot.time;
 
                               return (
                                 <button
@@ -879,7 +963,7 @@ export function BookingFlow() {
                               );
                             })}
                           </div>
-                      </div>
+                      </div>}
                     </div>
                   )}
                 </div>
@@ -1405,7 +1489,7 @@ export function BookingFlow() {
               <div className="space-y-4 pb-4 border-b border-border">
                 <div className="flex items-start gap-3">
                   <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl text-primary">{doctor.name.charAt(3)}</span>
+                    <span className="text-xl text-primary">{(doctor.name || 'Dr')[0]}</span>
                   </div>
                   <div>
                     <div className="font-medium mb-1">{doctor.name}</div>

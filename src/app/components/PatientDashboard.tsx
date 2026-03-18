@@ -408,7 +408,7 @@ export function PatientDashboard() {
                             <Button variant="outline" size="sm" className="h-8">Details</Button>
                         </div>
                         <div className="h-[300px] w-full mt-4 pr-4">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <AreaChart data={heartRateData}>
                                     <CartesianGrid key="grid" strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                     <XAxis 

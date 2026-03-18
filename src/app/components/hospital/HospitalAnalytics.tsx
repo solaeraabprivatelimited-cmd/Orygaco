@@ -144,7 +144,7 @@ export function HospitalAnalytics() {
                         <CardDescription>Conversion from slots to completed visits</CardDescription>
                     </CardHeader>
                     <CardContent className="pl-2">
-                        <ResponsiveContainer width="100%" height={300}>
+                        <ResponsiveContainer width="100%" height={300} minWidth={0}>
                             <BarChart data={funnel} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                                 <XAxis type="number" hide />

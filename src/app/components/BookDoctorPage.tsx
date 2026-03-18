@@ -304,7 +304,11 @@ export function BookDoctorPage() {
                 </Card>
               ) : (
                 displayedDoctors.map((doctor) => (
-                  <Card key={doctor.id} className="p-6 hover:shadow-lg transition-shadow">
+                  <Card 
+                    key={doctor.id} 
+                    className="p-6 hover:shadow-lg transition-shadow cursor-pointer group"
+                    onClick={() => navigate('doctor-detail', doctor)}
+                  >
                     <div className="flex flex-col md:flex-row gap-6">
                       {/* Doctor Image */}
                       <div className="flex-shrink-0">
@@ -327,7 +331,7 @@ export function BookDoctorPage() {
                           <div className="flex items-start justify-between mb-2">
                             <div>
                               <div className="flex items-center gap-2 mb-1">
-                                <h3 className="text-lg font-semibold">{doctor.name || 'Doctor'}</h3>
+                                <h3 className="text-lg font-semibold group-hover:text-primary transition-colors">{doctor.name || 'Doctor'}</h3>
                                 <VerificationBadge status={doctor.verification_status || (doctor.verified ? 'verified_doctor' : null)} showLabel={false} />
                               </div>
                               <div className="text-muted-foreground font-medium">{doctor.specialty || 'General Practitioner'}</div>
@@ -382,11 +386,11 @@ export function BookDoctorPage() {
                       <div className="flex flex-col gap-3 justify-center min-w-[140px]">
                         <Button 
                             className="w-full"
-                            onClick={() => navigate('booking', doctor)}
+                            onClick={(e) => { e.stopPropagation(); navigate('booking', doctor); }}
                         >
                           Book Appointment
                         </Button>
-                        <Button variant="outline" className="w-full" onClick={() => navigate('doctor-detail', doctor)}>
+                        <Button variant="outline" className="w-full" onClick={(e) => { e.stopPropagation(); navigate('doctor-detail', doctor); }}>
                           View Profile
                         </Button>
                       </div>

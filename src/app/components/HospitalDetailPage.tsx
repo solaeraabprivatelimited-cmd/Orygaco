@@ -221,7 +221,7 @@ export function HospitalDetailPage() {
                 <Card className="p-4">
                   <h3 className="text-base mb-2">About {displayHospital.name}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                    {hospital.description || `Welcome to ${displayHospital.name}, providing quality healthcare services in ${displayHospital.location}.`}
+                    {data.description || `Welcome to ${displayHospital.name}, providing quality healthcare services in ${displayHospital.location}.`}
                   </p>
                   <div className="grid grid-cols-3 gap-4 pt-3 border-t border-border">
                     <div className="text-center">
@@ -321,7 +321,7 @@ export function HospitalDetailPage() {
                                   </div>
                                 </div>
                               </div>
-                              <Button size="sm" className="text-xs">Book</Button>
+                              <Button size="sm" className="text-xs" onClick={(e) => { e.stopPropagation(); navigate('booking', doctor); }}>Book</Button>
                             </div>
                           </div>
                         ))}

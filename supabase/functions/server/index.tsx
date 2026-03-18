@@ -2384,10 +2384,28 @@ app.post(`${BASE_PATH}/bookings`, async (c) => {
   const ownerId = body.hospitalId || body.ownerId || doctorId;
 
   const slotKey = `slot:${ownerId}:${date}:${slotId}`;
-  const slot = await kv.get(slotKey);
+  let slot = await kv.get(slotKey);
 
+  // If slot not found in KV (e.g. default/fallback slot from client), create it on-the-fly
   if (!slot) {
-    return c.json({ error: "Slot not found" }, 404);
+    // Only allow on-the-fly creation for default/fallback slot IDs
+    if (slotId.startsWith('default-') || slotId.startsWith('fallback-') || slotId.startsWith('err-')) {
+      slot = {
+        id: slotId,
+        ownerId: ownerId,
+        doctorId: doctorId,
+        date: date,
+        time: body.time || 'N/A',
+        status: 'available',
+        capacity: 1,
+        bookedCount: 0,
+        consultationType: body.type || 'OPD',
+        createdAt: new Date().toISOString(),
+        autoCreated: true
+      };
+    } else {
+      return c.json({ error: "Slot not found" }, 404);
+    }
   }
 
   // 2. Check availability
@@ -2605,11 +2623,30 @@ app.get(`${BASE_PATH}/doctor-profile`, async (c) => {
   return c.json(profile);
 });
 
-// Get Public Doctors
+// Get Public Doctors - only those associated with a hospital
 app.get(`${BASE_PATH}/doctors`, async (c) => {
-  // Public endpoint
   const profiles = await kv.getByPrefix('doctor_profile:');
-  return c.json(profiles);
+  const hospitalDoctors = profiles.filter((doc: any) => doc.hospitalId || doc.hospital_id);
+  
+  // Enrich with hospital name if missing
+  const hospitalCache: Record<string, any> = {};
+  const enriched = await Promise.all(hospitalDoctors.map(async (doc: any) => {
+    const hId = doc.hospitalId || doc.hospital_id;
+    if (!doc.hospital && hId) {
+      if (!hospitalCache[hId]) {
+        try { hospitalCache[hId] = await kv.get(`hospital_profile:${hId}`); } catch(e) { /* skip */ }
+      }
+      const hp = hospitalCache[hId];
+      if (hp) {
+        doc.hospital = hp.name || hp.hospital_name || 'Hospital';
+        doc.hospitalName = doc.hospital;
+        if (!doc.location && hp.location) doc.location = hp.location;
+      }
+    }
+    return doc;
+  }));
+  
+  return c.json(enriched);
 });
 
 // Get Single Public Doctor by ID

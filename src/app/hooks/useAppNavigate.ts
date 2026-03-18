@@ -77,6 +77,11 @@ export function useAppNavigate() {
       path = path.replace(':id', encodeURIComponent(id));
     }
 
+    // For booking route, append doctorId as query param for resilience
+    if (viewOrPath === 'booking' && data?.id) {
+      path = `${path}?doctorId=${encodeURIComponent(data.id)}`;
+    }
+
     routerNavigate(path, { state: data });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
