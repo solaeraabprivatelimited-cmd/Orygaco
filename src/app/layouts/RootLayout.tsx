@@ -8,8 +8,7 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ORYAContainer } from '../components/orya/ORYAContainer';
 import { useAppNavigate, pathToView } from '../hooks/useAppNavigate';
 import { User } from 'lucide-react';
-import logo from 'figma:asset/79875bb7427953c37958c445f51a4ce2f3d7aa79.png';
-
+const logo = "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/Ot9IoDKZlYYU3v1pFUIw73/79875bb7427953c37958c445f51a4ce2f3d7aa79.png";
 function ORYARouteSync() {
   const { setContext } = useORYA();
   const location = useLocation();
