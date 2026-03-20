@@ -13,6 +13,42 @@ import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { useAppNavigate } from '../hooks/useAppNavigate';
 
 export function DoctorDashboard() {
+  // ── Chart data ──────────────────────────────────────────────────────
+  const patientActivityData = [
+    { day: 'Mon', patients: 8, newPatients: 3 },
+    { day: 'Tue', patients: 12, newPatients: 5 },
+    { day: 'Wed', patients: 10, newPatients: 2 },
+    { day: 'Thu', patients: 15, newPatients: 6 },
+    { day: 'Fri', patients: 9, newPatients: 4 },
+    { day: 'Sat', patients: 14, newPatients: 7 },
+    { day: 'Sun', patients: 6, newPatients: 1 },
+  ];
+
+  const revenueData = [
+    { month: 'Jan', revenue: 32000, target: 30000 },
+    { month: 'Feb', revenue: 38000, target: 35000 },
+    { month: 'Mar', revenue: 35000, target: 35000 },
+    { month: 'Apr', revenue: 42000, target: 40000 },
+    { month: 'May', revenue: 48000, target: 42000 },
+    { month: 'Jun', revenue: 45000, target: 45000 },
+  ];
+
+  const appointmentTrendData = [
+    { week: 'W1', appointments: 22, completed: 18 },
+    { week: 'W2', appointments: 28, completed: 24 },
+    { week: 'W3', appointments: 25, completed: 20 },
+    { week: 'W4', appointments: 32, completed: 28 },
+  ];
+
+  const ratingData = [
+    { month: 'Jan', rating: 4.5 },
+    { month: 'Feb', rating: 4.6 },
+    { month: 'Mar', rating: 4.7 },
+    { month: 'Apr', rating: 4.6 },
+    { month: 'May', rating: 4.8 },
+    { month: 'Jun', rating: 4.9 },
+  ];
+  // ────────────────────────────────────────────────────────────────────
   const { navigate } = useAppNavigate();
   const [doctor, setDoctor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
