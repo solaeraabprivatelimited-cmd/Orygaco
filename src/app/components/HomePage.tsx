@@ -274,7 +274,7 @@ export function HomePage() {
                  className="absolute w-[340px] h-[460px] rounded-[2.5rem] overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] z-30 ring-1 ring-white/20"
                >
                  <img
-                   src=src/assets/41a844b33bd9b451dfff73880eb0e6924dbe37b0.png
+                   src="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/Ot9IoDKZlYYU3v1pFUIw73/41a844b33bd9b451dfff73880eb0e6924dbe37b0.png"
                    alt="Doctor"
                    className="w-full h-full object-cover"
                  />
