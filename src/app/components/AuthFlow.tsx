@@ -66,14 +66,15 @@ export function AuthFlow() {
 
   const [otp, setOtp] = useState('');
 
-  const handleSendOTP = async () => {
+const handleSendOTP = async () => {
     if (!formData.phone) {
         toast.error("Please enter your mobile number");
         return;
     }
+
     setLoading(true);
+
     try {
-        // Note: Using the specific server function name from the environment
         const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/auth/otp/send`, {
             method: 'POST',
             headers: {
@@ -82,22 +83,25 @@ export function AuthFlow() {
             },
             body: JSON.stringify({ mobile_number: formData.phone })
         });
-        
+
+        const data = await response.json().catch(() => ({}));
+
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Network error' }));
-            throw new Error(errorData.error || 'Failed to send OTP');
+            toast.error(data.error || "Failed to send OTP");
+            return;
         }
 
-        const data = await response.json();
         if (data.otp) toast.success(`Dev OTP: ${data.otp}`);
+
         setCurrentScreen('otp');
+
     } catch (e: any) {
         console.error(e);
-        toast.error(e.message || "Failed to send OTP");
+        toast.error("Network error");
     } finally {
         setLoading(false);
     }
-  };
+};
 
   const handleVerifyOTP = async () => {
       setLoading(true);
