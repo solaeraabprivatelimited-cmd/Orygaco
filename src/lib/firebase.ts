@@ -1,17 +1,20 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
-// 🔴 REPLACE WITH YOUR REAL VALUES
 const firebaseConfig = {
-  apiKey: "AIzaSyCQsomFt73dcVu5gAT070VFiQgJ7gK_-Yg",
+  apiKey: "AIzaSyQcsomFtt73dcVu5qAT07VFiQjJ7qK_-Yg",
   authDomain: "oryga-auth.firebaseapp.com",
   projectId: "oryga-auth",
 };
 
-// ✅ Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// ✅ FIX: Prevent multiple initialization (VERY IMPORTANT)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// ✅ Initialize Auth
+// ✅ Auth will NEVER be undefined now
 const auth = getAuth(app);
+
+// 🔥 DEBUG (keep temporarily)
+console.log("🔥 Firebase App:", app);
+console.log("🔥 Firebase Auth:", auth);
 
 export { auth };
