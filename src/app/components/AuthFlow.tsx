@@ -1,3 +1,5 @@
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { useState } from 'react';
 import { Mail, Lock, Phone, User, Building, Briefcase, Shield, ArrowLeft, Eye, EyeOff, Heart, Calendar, FileText } from 'lucide-react';
 import { Button } from './ui/button';
@@ -44,6 +46,7 @@ export function AuthFlow() {
   const [showResend, setShowResend] = useState(false);
 
   // Form states
+  let confirmationResult: any;
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -64,43 +67,44 @@ export function AuthFlow() {
     facilityType: 'Hospital'
   });
 
-  const [otp, setOtp] = useState('');
+  const setupRecaptcha = () => {
+  if (!(window as any).recaptchaVerifier) {
+    (window as any).recaptchaVerifier = new RecaptchaVerifier(
+      "recaptcha-container",
+      { size: "invisible" },
+      auth
+    );
+  }
+};
 
 const handleSendOTP = async () => {
-    if (!formData.phone) {
-        toast.error("Please enter your mobile number");
-        return;
-    }
+  if (!formData.phone) {
+    toast.error("Please enter your mobile number");
+    return;
+  }
 
+  try {
     setLoading(true);
 
-    try {
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/auth/otp/send`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${publicAnonKey}`
-            },
-            body: JSON.stringify({ mobile_number: formData.phone })
-        });
+    setupRecaptcha();
 
-        const data = await response.json().catch(() => ({}));
+    const appVerifier = (window as any).recaptchaVerifier;
 
-        if (!response.ok) {
-            toast.error(data.error || "Failed to send OTP");
-            return;
-        }
+    confirmationResult = await signInWithPhoneNumber(
+      auth,
+      `+91${formData.phone}`,
+      appVerifier
+    );
 
-        if (data.otp) toast.success(`Dev OTP: ${data.otp}`);
+    toast.success("OTP sent successfully");
+    setCurrentScreen("otp");
 
-        setCurrentScreen('otp');
-
-    } catch (e: any) {
-        console.error(e);
-        toast.error("Network error");
-    } finally {
-        setLoading(false);
-    }
+  } catch (error: any) {
+    console.error(error);
+    toast.error(error.message || "Failed to send OTP");
+  } finally {
+    setLoading(false);
+  }
 };
 
   const handleVerifyOTP = async () => {
@@ -578,14 +582,19 @@ const handleSendOTP = async () => {
                         <Label htmlFor="phone">Mobile Number</Label>
                         <div className="relative mt-2">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                            id="phone"
-                            type="tel"
-                            placeholder="+91 98765 43210"
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            className="pl-10"
-                        />
+                   <Input
+  id="phone"
+  type="tel"
+  placeholder="Enter 10-digit mobile number"
+  value={formData.phone}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      phone: e.target.value.replace(/\D/g, "").slice(0, 10),
+    })
+  }
+  className="pl-10"
+/>
                         </div>
                     </div>
                     <Button 
@@ -1050,6 +1059,7 @@ const handleSendOTP = async () => {
                     </button>
                 </div>
             </div>
+            <div id="recaptcha-container"></div>
           </Card>
         </div>
       </div>
