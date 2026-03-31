@@ -1,5 +1,5 @@
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { auth } from "/lib/firebase";
+import { auth } from "../../lib/firebase";
 import { useState } from 'react';
 import { Mail, Lock, Phone, User, Building, Briefcase, Shield, ArrowLeft, Eye, EyeOff, Heart, Calendar, FileText } from 'lucide-react';
 import { Button } from './ui/button';
