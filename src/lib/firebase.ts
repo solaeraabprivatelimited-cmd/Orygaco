@@ -2,11 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCQsomFt73dcVu5gAT070VFiQgJ7gK_-Yg",
-  authDomain: "oryga-auth.firebaseapp.com",
-  projectId: "oryga-auth",
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
 };
 
+// ✅ Initialize Firebase ONLY ONCE
 const app = initializeApp(firebaseConfig);
 
+// ✅ Export auth correctly
 export const auth = getAuth(app);
