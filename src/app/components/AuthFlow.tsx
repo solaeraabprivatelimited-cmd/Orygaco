@@ -69,9 +69,16 @@ export function AuthFlow() {
 
   const setupRecaptcha = () => {
   if (!(window as any).recaptchaVerifier) {
+    const container = document.getElementById("recaptcha-container");
+
+    if (!container) {
+      console.error("❌ Recaptcha container not found");
+      return;
+    }
+
     (window as any).recaptchaVerifier = new RecaptchaVerifier(
-      auth, // ✅ FIRST PARAM MUST BE AUTH
-      "recaptcha-container", // ✅ SECOND PARAM ID
+      auth,
+      container, // ✅ PASS ELEMENT (NOT STRING)
       {
         size: "invisible",
       }
@@ -81,7 +88,7 @@ export function AuthFlow() {
 
 const handleSendOTP = async () => {
   if (!formData.phone) {
-    toast.error("Please enter your mobile number");
+    toast.error("Enter phone number");
     return;
   }
 
@@ -90,20 +97,26 @@ const handleSendOTP = async () => {
 
     setupRecaptcha();
 
-    const appVerifier = (window as any).recaptchaVerifier;
+    const verifier = (window as any).recaptchaVerifier;
 
-    confirmationResult = await signInWithPhoneNumber(
+    if (!verifier) {
+      throw new Error("Recaptcha not initialized");
+    }
+
+    const confirmation = await signInWithPhoneNumber(
       auth,
       `+91${formData.phone}`,
-      appVerifier
+      verifier
     );
 
-    toast.success("OTP sent successfully");
+    (window as any).confirmationResult = confirmation;
+
+    toast.success("OTP sent");
     setCurrentScreen("otp");
 
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.message || "Failed to send OTP");
+  } catch (err: any) {
+    console.error(err);
+    toast.error(err.message || "OTP failed");
   } finally {
     setLoading(false);
   }
