@@ -70,9 +70,11 @@ export function AuthFlow() {
   const setupRecaptcha = () => {
   if (!(window as any).recaptchaVerifier) {
     (window as any).recaptchaVerifier = new RecaptchaVerifier(
-      "recaptcha-container",
-      { size: "invisible" },
-      auth
+      auth, // ✅ FIRST PARAM MUST BE AUTH
+      "recaptcha-container", // ✅ SECOND PARAM ID
+      {
+        size: "invisible",
+      }
     );
   }
 };
