@@ -80,61 +80,76 @@ export function AuthFlow() {
    * Re-uses the existing verifier if one has already been created so that
    * switching screens doesn't break the widget.
    */
-  const setupRecaptcha = () => {
-    if ((window as any).recaptchaVerifier) return; // already initialised
+// Replace setupRecaptcha and handleSendOTP in AuthFlow.tsx with these:
 
-    const container = document.getElementById('recaptcha-container');
-    if (!container) {
-      console.error('❌ #recaptcha-container not found in DOM');
-      return;
-    }
-
-    (window as any).recaptchaVerifier = new RecaptchaVerifier(
-      auth,
-      container,   // pass DOM element, NOT a string id
-      { size: 'invisible' }
-    );
-  };
-
-  /** Send OTP via Firebase → stores confirmationResult globally */
-  const handleSendOTP = async () => {
-    if (!formData.phone || formData.phone.length !== 10) {
-      toast.error('Please enter a valid 10-digit mobile number');
-      return;
-    }
-
+const setupRecaptcha = () => {
+  // Always fully destroy before recreating to avoid "already rendered" error
+  if ((window as any).recaptchaVerifier) {
     try {
-      setLoading(true);
-      setupRecaptcha();
+      (window as any).recaptchaVerifier.clear();
+    } catch (_) {}
+    (window as any).recaptchaVerifier = null;
+  }
 
-      const verifier = (window as any).recaptchaVerifier;
-      if (!verifier) throw new Error('reCAPTCHA not initialised');
+  const container = document.getElementById('recaptcha-container');
+  if (!container) {
+    console.error('❌ #recaptcha-container not found');
+    return;
+  }
 
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        `+91${formData.phone}`,
-        verifier
-      );
+  // Clear any leftover reCAPTCHA DOM content
+  container.innerHTML = '';
 
-      (window as any).confirmationResult = confirmation;
-      setOtp(''); // clear any previous OTP entry
-      toast.success('OTP sent successfully');
-      setCurrentScreen('otp');
-    } catch (err: any) {
-      console.error('OTP send error:', err);
+  (window as any).recaptchaVerifier = new RecaptchaVerifier(
+    auth,
+    container,
+    { size: 'invisible' }
+  );
+};
 
-      // If reCAPTCHA is in a broken state, clear it so the next attempt
-      // creates a fresh one.
-      if ((window as any).recaptchaVerifier) {
-        try { (window as any).recaptchaVerifier.clear(); } catch (_) {}
-        (window as any).recaptchaVerifier = null;
-      }
+const handleSendOTP = async () => {
+  if (!formData.phone || formData.phone.length !== 10) {
+    toast.error('Please enter a valid 10-digit mobile number');
+    return;
+  }
 
-      toast.error(err.message || 'Failed to send OTP');
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    setupRecaptcha(); // always fresh verifier on each attempt
+
+    const verifier = (window as any).recaptchaVerifier;
+    if (!verifier) throw new Error('reCAPTCHA not initialised');
+
+    const confirmation = await signInWithPhoneNumber(
+      auth,
+      `+91${formData.phone}`,
+      verifier
+    );
+
+    (window as any).confirmationResult = confirmation;
+    setOtp('');
+    toast.success('OTP sent successfully');
+    setCurrentScreen('otp');
+  } catch (err: any) {
+    // Always clear broken verifier on any error
+    if ((window as any).recaptchaVerifier) {
+      try { (window as any).recaptchaVerifier.clear(); } catch (_) {}
+      (window as any).recaptchaVerifier = null;
     }
-  };
+
+    if (err.code === 'auth/billing-not-enabled') {
+      toast.error('SMS service not enabled. Please contact support.');
+    } else if (err.code === 'auth/invalid-phone-number') {
+      toast.error('Invalid phone number format.');
+    } else if (err.code === 'auth/too-many-requests') {
+      toast.error('Too many attempts. Please try again later.');
+    } else {
+      toast.error(err.message || 'Failed to send OTP');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   /** Confirm OTP via Firebase → exchange for Supabase session */
   const handleVerifyOTP = async () => {
