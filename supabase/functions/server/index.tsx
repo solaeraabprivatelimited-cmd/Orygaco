@@ -1,7 +1,12 @@
-import { Hono } from "npm:hono";
-import { cors } from "npm:hono/cors";
-import { logger } from "npm:hono/logger";
+import { Hono } from "https://deno.land/x/hono@v4.3.11/mod.ts";
+import { cors } from "https://deno.land/x/hono@v4.3.11/middleware/cors/mod.ts";
+import { logger } from "https://deno.land/x/hono@v4.3.11/middleware/logger/mod.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
+import * as kv from "./kv_store.tsx";
+import * as otpService from "./otp_service.ts";
+import * as authService from "./auth_service.ts";
+import { getAdvancedDashboardStats } from "./dashboard_metrics.ts";
 import * as kv from "./kv_store.tsx";
 import * as otpService from "./otp_service.ts";
 import * as authService from "./auth_service.ts";
@@ -38,15 +43,79 @@ const supabaseAdmin = createClient(
   }
 );
 
+const smtpHost = Deno.env.get("SMTP_HOST");
+const smtpPort = Number(Deno.env.get("SMTP_PORT") || 587);
+const smtpSecure = Deno.env.get("SMTP_SECURE") === "true";
+const smtpUser = Deno.env.get("SMTP_USER");
+const smtpPass = Deno.env.get("SMTP_PASS");
+const smtpFrom = Deno.env.get("SMTP_FROM") || smtpUser || "no-reply@example.com";
+
+function isSmtpConfigured() {
+  return !!smtpHost;
+}
+
+async function sendEmail(options: { to: string; subject: string; text?: string; html?: string; }) {
+  if (!isSmtpConfigured()) {
+    throw new Error("SMTP is not configured. Set SMTP_HOST and related environment variables.");
+  }
+
+  const client = new SmtpClient();
+  try {
+    const connectConfig: any = {
+      hostname: smtpHost!,
+      port: smtpPort,
+    };
+    if (smtpUser && smtpPass) {
+      connectConfig.username = smtpUser;
+      connectConfig.password = smtpPass;
+    }
+
+    if (smtpSecure || smtpPort === 465) {
+      await client.connectTLS(connectConfig);
+    } else {
+      await client.connect(connectConfig);
+    }
+
+    await client.send({
+      from: smtpFrom,
+      to: options.to,
+      subject: options.subject,
+      content: options.text || (options.html ?? ""),
+      html: options.html,
+    });
+  } finally {
+    await client.close();
+  }
+}
+
 // Health check endpoint
 app.get(`${BASE_PATH}/health`, (c) => {
   return c.json({ 
     status: "ok", 
     env: { 
         hasUrl: !!Deno.env.get("SUPABASE_URL"), 
-        hasKey: !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") 
+        hasKey: !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+        hasSmtp: !!smtpHost,
+        smtpHost,
+        smtpFrom
     } 
   });
+});
+
+app.post(`${BASE_PATH}/email/send`, async (c) => {
+  try {
+    const body = await c.req.json();
+    const { to, subject, text, html } = body;
+    if (!to || !subject) {
+      return c.json({ error: "'to' and 'subject' are required" }, 400);
+    }
+
+    const info = await sendEmail({ to, subject, text, html });
+    return c.json({ success: true, info });
+  } catch (e: any) {
+    console.error("Email send error:", e);
+    return c.json({ error: e.message || "Unable to send email" }, 500);
+  }
 });
 
 // --- RBAC & SECURITY LAYER ---
@@ -270,6 +339,19 @@ app.post(`${BASE_PATH}/signup`, async (c) => {
     } catch (kvError) {
       console.error("Failed to create initial KV profile:", kvError);
       // Non-blocking error
+    }
+
+    if (isSmtpConfigured()) {
+      try {
+        await sendEmail({
+          to: email,
+          subject: "Welcome to Orygaco",
+          text: `Hi ${full_name || "there"},\n\nYour account has been created successfully. Welcome to Orygaco!`,
+          html: `<p>Hi ${full_name || "there"},</p><p>Your account has been created successfully. Welcome to Orygaco!</p>`
+        });
+      } catch (mailError: any) {
+        console.error("Signup welcome email failed:", mailError);
+      }
     }
   }
 
