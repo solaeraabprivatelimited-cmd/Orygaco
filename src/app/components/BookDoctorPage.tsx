@@ -202,9 +202,9 @@ export function BookDoctorPage() {
                   <SelectContent>
                     <SelectItem value="all">All Hospitals</SelectItem>
                     {hospitals.map((hospital) => (
-                      <SelectItem key={hospital.id || hospital.name} value={hospital.name.toLowerCase()}>
-                        {hospital.name}
-                      </SelectItem>
+                    <SelectItem key={hospital.id || hospital.name} value={(hospital.name ?? '').toLowerCase()}>
+  {hospital.name ?? 'Unknown Hospital'}
+</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
