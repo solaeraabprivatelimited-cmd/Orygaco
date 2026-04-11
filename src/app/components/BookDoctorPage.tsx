@@ -201,11 +201,11 @@ export function BookDoctorPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Hospitals</SelectItem>
-                    {hospitals.map((hospital) => (
-                    <SelectItem key={hospital.id || hospital.name} value={(hospital.name ?? '').toLowerCase()}>
-  {hospital.name ?? 'Unknown Hospital'}
-</SelectItem>
-                    ))}
+                  {hospitals.filter(h => h.name).map((hospital) => (
+  <SelectItem key={hospital.id || hospital.name} value={hospital.name.toLowerCase()}>
+    {hospital.name}
+  </SelectItem>
+))}
                   </SelectContent>
                 </Select>
               </div>
