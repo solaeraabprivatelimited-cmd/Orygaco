@@ -8,7 +8,8 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ORYAContainer } from '../components/orya/ORYAContainer';
 import { useAppNavigate, pathToView } from '../hooks/useAppNavigate';
 import { User } from 'lucide-react';
-const logo = "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/Ot9IoDKZlYYU3v1pFUIw73/79875bb7427953c37958c445f51a4ce2f3d7aa79.png";
+import OrygaPNill from '../../imports/OrygaPNill';
+
 function ORYARouteSync() {
   const { setContext } = useORYA();
   const location = useLocation();
@@ -85,11 +86,9 @@ function Footer() {
             >
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <img
-                  src={logo}
-                  alt="ORYGA"
-                  className="w-10 h-10 relative z-10 transition-transform duration-500 group-hover:scale-110"
-                />
+                <div className="w-10 h-10 relative z-10 transition-transform duration-500 group-hover:scale-110">
+                  <OrygaPNill />
+                </div>
               </div>
               <span className="text-2xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
                 ORYGA
