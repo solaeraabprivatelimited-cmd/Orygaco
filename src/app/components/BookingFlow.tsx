@@ -400,7 +400,28 @@ export function BookingFlow() {
       else if (selectedSlot?.bookedCount !== undefined) {
         setSelectedToken(String(Number(selectedSlot.bookedCount) + 1));
       }
-
+      // After: const result = await response.json();
+// Add this (fire and forget — don't await, don't block the UI):
+fetch(
+  `https://${projectId}.supabase.co/functions/v1/make-server-fd75a5db/emails/appointment-confirmation`,
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${publicAnonKey}`,
+    },
+    body: JSON.stringify({
+      patientEmail: patient.email ?? '',   // add email field when saving patients
+      patientName: patient.name,
+      doctorName: doctor.name,
+      date: selectedDate,
+      time: selectedTime,
+      type: consultationType,
+      hospitalName: doctor.hospital,
+      amount: doctor.consultationFee,
+    }),
+  }
+).catch(e => console.warn('Confirmation email failed silently:', e));
       return true;
     } catch (error: any) {
       console.error('Booking save error:', error);
