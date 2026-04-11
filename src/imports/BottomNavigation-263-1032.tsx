@@ -1,4 +1,4 @@
-import svgPaths from "/Oryga P NILL.png";
+import image from "/Oryga P NILL.png";
 
 function MynauiHomeSolid() {
   return (
