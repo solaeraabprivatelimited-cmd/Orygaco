@@ -67,6 +67,143 @@ export function AuthFlow() {
     facilityType: 'Hospital'
   });
 
+  const [formErrors, setFormErrors] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    specialty: '',
+    registrationNumber: '',
+    registrationYear: '',
+    stateMedicalCouncil: '',
+    hospitalName: '',
+    licenseNumber: '',
+    gstin: '',
+    otp: '',
+  });
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const clearError = (field: keyof typeof formErrors) => {
+    setFormErrors((prev) => ({ ...prev, [field]: '' }));
+  };
+
+  const validatePhoneValue = (phone: string) => /^[0-9]{10}$/.test(phone);
+  const validatePasswordValue = (password: string) => password.length >= 6;
+
+  const validateLoginForm = () => {
+    const errors = {
+      email: '',
+      password: '',
+      phone: '',
+    };
+
+    if (userType === 'patient') {
+      if (!formData.phone.trim()) {
+        errors.phone = 'Mobile number is required';
+      } else if (!validatePhoneValue(formData.phone.trim())) {
+        errors.phone = 'Enter a valid 10-digit mobile number';
+      }
+    } else {
+      if (!formData.email.trim()) {
+        errors.email = 'Email is required';
+      } else if (!emailRegex.test(formData.email.trim())) {
+        errors.email = 'Enter a valid email address';
+      }
+      if (!formData.password) {
+        errors.password = 'Password is required';
+      }
+    }
+
+    setFormErrors((prev) => ({ ...prev, ...errors }));
+    return !errors.email && !errors.password && !errors.phone;
+  };
+
+  const validateSignupForm = () => {
+    const errors = {
+      name: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      specialty: '',
+      registrationNumber: '',
+      registrationYear: '',
+      stateMedicalCouncil: '',
+      hospitalName: '',
+      licenseNumber: '',
+    };
+
+    if (!formData.name.trim()) {
+      errors.name = 'Full name is required';
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!emailRegex.test(formData.email.trim())) {
+      errors.email = 'Enter a valid email address';
+    }
+
+    if (!formData.phone.trim()) {
+      errors.phone = 'Phone number is required';
+    } else if (!validatePhoneValue(formData.phone.trim())) {
+      errors.phone = 'Enter a valid 10-digit phone number';
+    }
+
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (!validatePasswordValue(formData.password)) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (userType === 'doctor') {
+      if (!formData.specialty) {
+        errors.specialty = 'Specialty is required';
+      }
+      if (!formData.registrationNumber.trim()) {
+        errors.registrationNumber = 'Registration number is required';
+      }
+      if (!formData.registrationYear.trim()) {
+        errors.registrationYear = 'Registration year is required';
+      } else if (!/^[0-9]{4}$/.test(formData.registrationYear.trim())) {
+        errors.registrationYear = 'Use a valid 4-digit year';
+      }
+      if (!formData.stateMedicalCouncil) {
+        errors.stateMedicalCouncil = 'Medical council is required';
+      }
+    }
+
+    if (userType === 'hospital') {
+      if (!formData.hospitalName.trim()) {
+        errors.hospitalName = 'Hospital name is required';
+      }
+      if (!formData.licenseNumber.trim()) {
+        errors.licenseNumber = 'License number is required';
+      }
+    }
+
+    setFormErrors((prev) => ({ ...prev, ...errors }));
+    return Object.values(errors).every((value) => !value);
+  };
+
+  const validateForgotPasswordForm = () => {
+    const errors = { email: '' };
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!emailRegex.test(formData.email.trim())) {
+      errors.email = 'Enter a valid email address';
+    }
+    setFormErrors((prev) => ({ ...prev, ...errors }));
+    return !errors.email;
+  };
+
   // ─────────────────────────────────────────────────────────────────────────────
   // Firebase Phone Auth helpers
   // ─────────────────────────────────────────────────────────────────────────────
@@ -107,12 +244,15 @@ const setupRecaptcha = () => {
 };
 
 const handleSendOTP = async () => {
-  if (!formData.phone || formData.phone.length !== 10) {
+  const phone = formData.phone.trim();
+  if (!phone || !validatePhoneValue(phone)) {
+    setFormErrors((prev) => ({ ...prev, phone: 'Please enter a valid 10-digit mobile number' }));
     toast.error('Please enter a valid 10-digit mobile number');
     return;
   }
 
   try {
+    setFormErrors((prev) => ({ ...prev, phone: '' }));
     setLoading(true);
     setupRecaptcha(); // always fresh verifier on each attempt
 
@@ -153,10 +293,12 @@ const handleSendOTP = async () => {
   /** Confirm OTP via Firebase → exchange for Supabase session */
   const handleVerifyOTP = async () => {
     if (!otp || otp.length !== 6) {
+      setFormErrors((prev) => ({ ...prev, otp: 'Enter the 6-digit OTP' }));
       toast.error('Please enter the 6-digit OTP');
       return;
     }
 
+    setFormErrors((prev) => ({ ...prev, otp: '' }));
     const confirmation = (window as any).confirmationResult;
     if (!confirmation) {
       toast.error('Session expired. Please request a new OTP.');
@@ -335,14 +477,8 @@ const handleSendOTP = async () => {
   const handleLogin = async () => {
     setShowResend(false);
 
-    if (!formData.email || !formData.password) {
-      toast.error('Please enter both email and password');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      toast.error('Please enter a valid email address');
+    if (!validateLoginForm()) {
+      toast.error('Please fix the highlighted fields to continue');
       return;
     }
 
@@ -417,33 +553,8 @@ const handleSendOTP = async () => {
   };
 
   const handleSignupComplete = async () => {
-    if (!formData.name || !formData.email || !formData.phone || !formData.password) {
-      toast.error('Please fill in all required personal details');
-      return;
-    }
-
-    if (userType === 'doctor') {
-      if (!formData.specialty || !formData.registrationNumber || !formData.registrationYear || !formData.stateMedicalCouncil) {
-        toast.error('Please fill in all required professional details');
-        return;
-      }
-    }
-
-    if (userType === 'hospital') {
-      if (!formData.hospitalName || !formData.facilityType || !formData.licenseNumber) {
-        toast.error('Please fill in all required hospital details');
-        return;
-      }
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
+    if (!validateSignupForm()) {
+      toast.error('Please fix the highlighted fields to continue');
       return;
     }
 
@@ -684,15 +795,18 @@ const handleSendOTP = async () => {
                           type="tel"
                           placeholder="Enter 10-digit mobile number"
                           value={formData.phone}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            clearError('phone');
                             setFormData({
                               ...formData,
                               phone: e.target.value.replace(/\D/g, '').slice(0, 10),
-                            })
-                          }
-                          className="pl-10"
+                            });
+                          }}
+                          className={`pl-10 ${formErrors.phone ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                          aria-invalid={!!formErrors.phone}
                         />
                       </div>
+                      {formErrors.phone && <p className="text-xs text-rose-500 mt-1">{formErrors.phone}</p>}
                     </div>
                     <Button
                       className="w-full bg-[rgb(230,62,109)]"
@@ -725,10 +839,15 @@ const handleSendOTP = async () => {
                           type="email"
                           placeholder="name@example.com"
                           value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="pl-10"
+                          onChange={(e) => {
+                            clearError('email');
+                            setFormData({ ...formData, email: e.target.value });
+                          }}
+                          className={`pl-10 ${formErrors.email ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                          aria-invalid={!!formErrors.email}
                         />
                       </div>
+                      {formErrors.email && <p className="text-xs text-rose-500 mt-1">{formErrors.email}</p>}
                     </div>
 
                     <div>
@@ -740,8 +859,12 @@ const handleSendOTP = async () => {
                           type={showPassword ? 'text' : 'password'}
                           placeholder="Enter your password"
                           value={formData.password}
-                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          className="pl-10 pr-10"
+                          onChange={(e) => {
+                            clearError('password');
+                            setFormData({ ...formData, password: e.target.value });
+                          }}
+                          className={`pl-10 pr-10 ${formErrors.password ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                          aria-invalid={!!formErrors.password}
                         />
                         <button
                           type="button"
@@ -751,6 +874,7 @@ const handleSendOTP = async () => {
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
+                      {formErrors.password && <p className="text-xs text-rose-500 mt-1">{formErrors.password}</p>}
                     </div>
 
                     <div className="flex items-center justify-between text-sm">
@@ -875,10 +999,15 @@ const handleSendOTP = async () => {
                       id="name"
                       placeholder="Enter your full name"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="pl-10"
+                      onChange={(e) => {
+                        clearError('name');
+                        setFormData({ ...formData, name: e.target.value });
+                      }}
+                      className={`pl-10 ${formErrors.name ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                      aria-invalid={!!formErrors.name}
                     />
                   </div>
+                  {formErrors.name && <p className="text-xs text-rose-500 mt-1">{formErrors.name}</p>}
                 </div>
 
                 <div>
@@ -890,10 +1019,15 @@ const handleSendOTP = async () => {
                       type="email"
                       placeholder="your.email@example.com"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="pl-10"
+                      onChange={(e) => {
+                        clearError('email');
+                        setFormData({ ...formData, email: e.target.value });
+                      }}
+                      className={`pl-10 ${formErrors.email ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                      aria-invalid={!!formErrors.email}
                     />
                   </div>
+                  {formErrors.email && <p className="text-xs text-rose-500 mt-1">{formErrors.email}</p>}
                 </div>
 
                 <div>
@@ -905,10 +1039,15 @@ const handleSendOTP = async () => {
                       type="tel"
                       placeholder="+91 98765 43210"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="pl-10"
+                      onChange={(e) => {
+                        clearError('phone');
+                        setFormData({ ...formData, phone: e.target.value });
+                      }}
+                      className={`pl-10 ${formErrors.phone ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                      aria-invalid={!!formErrors.phone}
                     />
                   </div>
+                  {formErrors.phone && <p className="text-xs text-rose-500 mt-1">{formErrors.phone}</p>}
                 </div>
 
                 {/* Doctor specific fields */}
@@ -919,8 +1058,12 @@ const handleSendOTP = async () => {
                       <select
                         id="specialty"
                         value={formData.specialty}
-                        onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-2"
+                        onChange={(e) => {
+                          clearError('specialty');
+                          setFormData({ ...formData, specialty: e.target.value });
+                        }}
+                        className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-2 ${formErrors.specialty ? 'border-rose-500 focus-visible:ring-rose-200' : 'border-input bg-background'}`}
+                        aria-invalid={!!formErrors.specialty}
                       >
                         <option value="" disabled>Select your specialty</option>
                         <option value="General Physician">General Physician</option>
@@ -936,6 +1079,7 @@ const handleSendOTP = async () => {
                         <option value="Ophthalmologist">Ophthalmologist</option>
                         <option value="Urologist">Urologist</option>
                       </select>
+                      {formErrors.specialty && <p className="text-xs text-rose-500 mt-1">{formErrors.specialty}</p>}
                     </div>
                     <div>
                       <Label htmlFor="registration">Medical Registration Number <span className="text-red-500">*</span></Label>
@@ -943,9 +1087,14 @@ const handleSendOTP = async () => {
                         id="registration"
                         placeholder="Enter MCI/NMC registration number"
                         value={formData.registrationNumber}
-                        onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
-                        className="mt-2"
+                        onChange={(e) => {
+                          clearError('registrationNumber');
+                          setFormData({ ...formData, registrationNumber: e.target.value });
+                        }}
+                        className={`mt-2 ${formErrors.registrationNumber ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                        aria-invalid={!!formErrors.registrationNumber}
                       />
+                      {formErrors.registrationNumber && <p className="text-xs text-rose-500 mt-1">{formErrors.registrationNumber}</p>}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -954,17 +1103,26 @@ const handleSendOTP = async () => {
                           id="regYear"
                           placeholder="YYYY"
                           value={formData.registrationYear}
-                          onChange={(e) => setFormData({ ...formData, registrationYear: e.target.value })}
-                          className="mt-2"
+                          onChange={(e) => {
+                            clearError('registrationYear');
+                            setFormData({ ...formData, registrationYear: e.target.value });
+                          }}
+                          className={`mt-2 ${formErrors.registrationYear ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                          aria-invalid={!!formErrors.registrationYear}
                         />
+                        {formErrors.registrationYear && <p className="text-xs text-rose-500 mt-1">{formErrors.registrationYear}</p>}
                       </div>
                       <div>
                         <Label htmlFor="council">State Medical Council <span className="text-red-500">*</span></Label>
                         <select
                           id="council"
                           value={formData.stateMedicalCouncil}
-                          onChange={(e) => setFormData({ ...formData, stateMedicalCouncil: e.target.value })}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-2"
+                          onChange={(e) => {
+                            clearError('stateMedicalCouncil');
+                            setFormData({ ...formData, stateMedicalCouncil: e.target.value });
+                          }}
+                          className={`flex h-10 w-full rounded-md px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-2 ${formErrors.stateMedicalCouncil ? 'border-rose-500 focus-visible:ring-rose-200' : 'border-input bg-background'}`}
+                          aria-invalid={!!formErrors.stateMedicalCouncil}
                         >
                           <option value="" disabled>Select Medical Council</option>
                           <option value="Andhra Pradesh Medical Council">Andhra Pradesh Medical Council</option>
@@ -999,6 +1157,7 @@ const handleSendOTP = async () => {
                           <option value="West Bengal Medical Council">West Bengal Medical Council</option>
                           <option value="National Medical Commission">National Medical Commission (NMC)</option>
                         </select>
+                        {formErrors.stateMedicalCouncil && <p className="text-xs text-rose-500 mt-1">{formErrors.stateMedicalCouncil}</p>}
                       </div>
                     </div>
                   </>
@@ -1015,10 +1174,15 @@ const handleSendOTP = async () => {
                           id="hospital-name"
                           placeholder="Enter hospital name"
                           value={formData.hospitalName}
-                          onChange={(e) => setFormData({ ...formData, hospitalName: e.target.value })}
-                          className="pl-10"
+                          onChange={(e) => {
+                            clearError('hospitalName');
+                            setFormData({ ...formData, hospitalName: e.target.value });
+                          }}
+                          className={`pl-10 ${formErrors.hospitalName ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                          aria-invalid={!!formErrors.hospitalName}
                         />
                       </div>
+                      {formErrors.hospitalName && <p className="text-xs text-rose-500 mt-1">{formErrors.hospitalName}</p>}
                     </div>
                     <div>
                       <Label htmlFor="facilityType">Facility Type <span className="text-red-500">*</span></Label>
@@ -1040,9 +1204,14 @@ const handleSendOTP = async () => {
                         id="license"
                         placeholder="Enter license number"
                         value={formData.licenseNumber}
-                        onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-                        className="mt-2"
+                        onChange={(e) => {
+                          clearError('licenseNumber');
+                          setFormData({ ...formData, licenseNumber: e.target.value });
+                        }}
+                        className={`mt-2 ${formErrors.licenseNumber ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                        aria-invalid={!!formErrors.licenseNumber}
                       />
+                      {formErrors.licenseNumber && <p className="text-xs text-rose-500 mt-1">{formErrors.licenseNumber}</p>}
                     </div>
                     <div>
                       <Label htmlFor="gstin">GSTIN</Label>
@@ -1066,8 +1235,12 @@ const handleSendOTP = async () => {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Create a strong password"
                       value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="pl-10 pr-10"
+                      onChange={(e) => {
+                        clearError('password');
+                        setFormData({ ...formData, password: e.target.value });
+                      }}
+                      className={`pl-10 pr-10 ${formErrors.password ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                      aria-invalid={!!formErrors.password}
                     />
                     <button
                       type="button"
@@ -1077,6 +1250,34 @@ const handleSendOTP = async () => {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {formErrors.password && <p className="text-xs text-rose-500 mt-1">{formErrors.password}</p>}
+                </div>
+
+                <div>
+                  <Label htmlFor="confirm-password">Confirm Password <span className="text-red-500">*</span></Label>
+                  <div className="relative mt-2">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="confirm-password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Re-enter password"
+                      value={formData.confirmPassword}
+                      onChange={(e) => {
+                        clearError('confirmPassword');
+                        setFormData({ ...formData, confirmPassword: e.target.value });
+                      }}
+                      className={`pl-10 pr-10 ${formErrors.confirmPassword ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                      aria-invalid={!!formErrors.confirmPassword}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {formErrors.confirmPassword && <p className="text-xs text-rose-500 mt-1">{formErrors.confirmPassword}</p>}
                 </div>
 
                 <Button
@@ -1144,10 +1345,15 @@ const handleSendOTP = async () => {
                     id="otp"
                     placeholder="123456"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="text-center tracking-widest text-lg mt-2"
+                    onChange={(e) => {
+                      clearError('otp');
+                      setOtp(e.target.value.replace(/\D/g, '').slice(0, 6));
+                    }}
+                    className={`text-center tracking-widest text-lg mt-2 ${formErrors.otp ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
                     maxLength={6}
+                    aria-invalid={!!formErrors.otp}
                   />
+                  {formErrors.otp && <p className="text-xs text-rose-500 mt-1 text-center">{formErrors.otp}</p>}
                 </div>
 
                 <Button
@@ -1221,18 +1427,22 @@ const handleSendOTP = async () => {
                       type="email"
                       placeholder="name@example.com"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="pl-10"
+                      onChange={(e) => {
+                        clearError('email');
+                        setFormData({ ...formData, email: e.target.value });
+                      }}
+                      className={`pl-10 ${formErrors.email ? 'border-rose-500 focus-visible:ring-rose-200' : ''}`}
+                      aria-invalid={!!formErrors.email}
                     />
                   </div>
+                  {formErrors.email && <p className="text-xs text-rose-500 mt-1">{formErrors.email}</p>}
                 </div>
 
                 <Button
                   className="w-full"
                   size="lg"
                   onClick={async () => {
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailRegex.test(formData.email.trim())) {
+                    if (!validateForgotPasswordForm()) {
                       toast.error('Please enter a valid email address');
                       return;
                     }
