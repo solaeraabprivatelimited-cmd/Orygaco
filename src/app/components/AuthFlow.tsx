@@ -8,7 +8,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import logo from '/Oryga P NILL.png;
 import OrygaDNill from '../../imports/OrygaDNill';
 import OrygaPNill from '../../imports/OrygaPNill-226-129';
 import { supabase } from '@/lib/supabase';
@@ -246,7 +245,7 @@ const handleSendOTP = async () => {
     if (userType === 'doctor') {
       return <div className="w-10 h-10 relative"><OrygaDNill /></div>;
     }
-    return <img src={logo} alt="ORYGA" className="w-10 h-10" />;
+    return <div className="w-10 h-10 relative"><OrygaPNill /></div>;
   };
 
   const handleLogin = async () => {
@@ -1109,6 +1108,10 @@ const handleSendOTP = async () => {
 
             <Card className="p-8">
               <div className="text-center mb-8">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <SmallLogoComponent />
+                  <span className="text-2xl tracking-tight">ORYGA</span>
+                </div>
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Lock className="w-8 h-8 text-primary" />
                 </div>
@@ -1208,6 +1211,10 @@ const handleSendOTP = async () => {
           <div className="max-w-md w-full">
             <Card className="p-8">
               <div className="text-center mb-8">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <SmallLogoComponent />
+                  <span className="text-2xl tracking-tight">ORYGA</span>
+                </div>
                 <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 text-primary">
                   {currentOnboarding.icon}
                 </div>
