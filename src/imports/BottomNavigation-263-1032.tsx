@@ -1,5 +1,4 @@
-import image from "/Oryga P NILL.png";
-
+import logo from '/Oryga P NILL.png;
 function MynauiHomeSolid() {
   return (
     <div className="relative shrink-0 size-[24px]" data-name="mynaui:home-solid">
