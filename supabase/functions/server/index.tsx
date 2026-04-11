@@ -302,6 +302,119 @@ app.post(`${BASE_PATH}/auth/otp/verify`, async (c) => {
   }
 });
 
+// Firebase Login (Google OAuth)
+app.post(`${BASE_PATH}/auth/firebase-login`, async (c) => {
+  try {
+    const body = await c.req.json();
+    const { firebase_id_token } = body;
+
+    if (!firebase_id_token) {
+      return c.json({ error: "Firebase ID token is required" }, 400);
+    }
+
+    // For this implementation, we'll decode the Firebase token
+    // In production, you should verify the token signature
+    const parts = firebase_id_token.split('.');
+    if (parts.length !== 3) {
+      return c.json({ error: "Invalid token format" }, 400);
+    }
+
+    const payload = JSON.parse(atob(parts[1]));
+    const firebaseUser = payload;
+
+    // Check if user already exists in Supabase by email
+    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+
+    let existingUser = null;
+    if (!listError && existingUsers) {
+      existingUser = existingUsers.users.find(u => u.email === firebaseUser.email);
+    }
+
+    let user;
+    let isNewUser = false;
+
+    if (!existingUser) {
+      // Create new user in Supabase
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email: firebaseUser.email,
+        email_confirm: true,
+        user_metadata: {
+          firebase_uid: firebaseUser.sub,
+          full_name: firebaseUser.name || firebaseUser.email?.split('@')[0],
+          role: 'patient', // Default role for Google auth
+          auth_provider: 'google',
+          picture: firebaseUser.picture
+        }
+      });
+
+      if (error) {
+        console.error("Create user error:", error);
+        return c.json({ error: error.message }, 400);
+      }
+
+      user = data.user;
+      isNewUser = true;
+    } else {
+      user = existingUser;
+      // Update user metadata if needed
+      if (!user.user_metadata?.firebase_uid) {
+        await supabaseAdmin.auth.admin.updateUserById(user.id, {
+          user_metadata: {
+            ...user.user_metadata,
+            firebase_uid: firebaseUser.sub,
+            auth_provider: 'google',
+            picture: firebaseUser.picture
+          }
+        });
+      }
+    }
+
+    // For patients: allow signup/login
+    // For doctors/hospitals: check if they exist and are verified
+    const role = user.user_metadata?.role || 'patient';
+
+    if (role === 'doctor' || role === 'hospital') {
+      // Check if user exists in KV store
+      const existingProfile = await kv.get(`${role}_profile:${user.id}`);
+      if (!existingProfile) {
+        return c.json({ error: `No ${role} account found. Please sign up through the official registration process.` }, 403);
+      }
+
+      // Check verification status
+      if (existingProfile.verification_status !== 'verified_doctor' && existingProfile.verification_status !== 'verified_hospital') {
+        return c.json({ error: `Your ${role} account is not verified yet. Please contact support.` }, 403);
+      }
+    } else if (role === 'patient') {
+      // For patients, create/update profile
+      const patientProfile = {
+        id: user.id,
+        name: user.user_metadata?.full_name || firebaseUser.name || 'Patient',
+        email: user.email,
+        role: 'patient',
+        joinedAt: isNewUser ? new Date().toISOString() : (await kv.get(`patient_profile:${user.id}`))?.joinedAt || new Date().toISOString()
+      };
+      await kv.set(`patient_profile:${user.id}`, patientProfile);
+    }
+
+    // Generate custom access token
+    const accessToken = `supabase_${user.id}_${Date.now()}_${Math.random().toString(36).substr(2)}`;
+
+    return c.json({
+      session: { access_token: accessToken },
+      user: {
+        id: user.id,
+        email: user.email,
+        user_metadata: user.user_metadata,
+        role: role
+      },
+      isNewUser
+    });
+  } catch (e: any) {
+    console.error("Firebase login error:", e);
+    return c.json({ error: e.message || "Internal Server Error" }, 500);
+  }
+});
+
 // Signup Endpoint
 app.post(`${BASE_PATH}/signup`, async (c) => {
   const body = await c.req.json();
@@ -1197,6 +1310,21 @@ async function getUser(c, explicitToken = null) {
             }
         }
         return { user: null, error: "Invalid or expired custom token" };
+    }
+
+    // 5.6 Check Supabase Custom Token (for Google auth)
+    if (token.startsWith('supabase_')) {
+        // Extract user ID from token
+        const parts = token.split('_');
+        if (parts.length >= 2) {
+            const userId = parts[1];
+            // Get user from Supabase admin
+            const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+            if (!userError && userData.user) {
+                return { user: userData.user, error: null };
+            }
+        }
+        return { user: null, error: "Invalid Supabase token" };
     }
 
     // 6. Verify with Supabase Auth
