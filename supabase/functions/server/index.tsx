@@ -1,7 +1,12 @@
-import { Hono } from "npm:hono";
-import { cors } from "npm:hono/cors";
-import { logger } from "npm:hono/logger";
+import { Hono } from "https://deno.land/x/hono@v4.3.11/mod.ts";
+import { cors } from "https://deno.land/x/hono@v4.3.11/middleware/cors/mod.ts";
+import { logger } from "https://deno.land/x/hono@v4.3.11/middleware/logger/mod.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
+import * as kv from "./kv_store.tsx";
+import * as otpService from "./otp_service.ts";
+import * as authService from "./auth_service.ts";
+import { getAdvancedDashboardStats } from "./dashboard_metrics.ts";
 import * as kv from "./kv_store.tsx";
 import * as otpService from "./otp_service.ts";
 import * as authService from "./auth_service.ts";
@@ -38,15 +43,114 @@ const supabaseAdmin = createClient(
   }
 );
 
+const smtpHost = Deno.env.get("SMTP_HOST");
+const smtpPort = Number(Deno.env.get("SMTP_PORT") || 587);
+const smtpSecure = Deno.env.get("SMTP_SECURE") === "true";
+const smtpUser = Deno.env.get("SMTP_USER");
+const smtpPass = Deno.env.get("SMTP_PASS");
+const smtpFrom = Deno.env.get("SMTP_FROM") || smtpUser || "no-reply@example.com";
+const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID') || '';
+const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET') || '';
+const RAZORPAY_API_BASE = 'https://api.razorpay.com/v1';
+
+function getRazorpayAuthHeader() {
+  if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) return null;
+  return `Basic ${btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`)}`;
+}
+
+function timingSafeEqual(a: string, b: string) {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+async function computeRazorpaySignature(orderId: string, paymentId: string) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(RAZORPAY_KEY_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(`${orderId}|${paymentId}`)
+  );
+  return Array.from(new Uint8Array(signature))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function isSmtpConfigured() {
+  return !!smtpHost;
+}
+
+async function sendEmail(options: { to: string; subject: string; text?: string; html?: string; }) {
+  if (!isSmtpConfigured()) {
+    throw new Error("SMTP is not configured. Set SMTP_HOST and related environment variables.");
+  }
+
+  const client = new SmtpClient();
+  try {
+    const connectConfig: any = {
+      hostname: smtpHost!,
+      port: smtpPort,
+    };
+    if (smtpUser && smtpPass) {
+      connectConfig.username = smtpUser;
+      connectConfig.password = smtpPass;
+    }
+
+    if (smtpSecure || smtpPort === 465) {
+      await client.connectTLS(connectConfig);
+    } else {
+      await client.connect(connectConfig);
+    }
+
+    await client.send({
+      from: smtpFrom,
+      to: options.to,
+      subject: options.subject,
+      content: options.text || (options.html ?? ""),
+      html: options.html,
+    });
+  } finally {
+    await client.close();
+  }
+}
+
 // Health check endpoint
 app.get(`${BASE_PATH}/health`, (c) => {
   return c.json({ 
     status: "ok", 
     env: { 
         hasUrl: !!Deno.env.get("SUPABASE_URL"), 
-        hasKey: !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") 
+        hasKey: !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+        hasSmtp: !!smtpHost,
+        smtpHost,
+        smtpFrom
     } 
   });
+});
+
+app.post(`${BASE_PATH}/email/send`, async (c) => {
+  try {
+    const body = await c.req.json();
+    const { to, subject, text, html } = body;
+    if (!to || !subject) {
+      return c.json({ error: "'to' and 'subject' are required" }, 400);
+    }
+
+    const info = await sendEmail({ to, subject, text, html });
+    return c.json({ success: true, info });
+  } catch (e: any) {
+    console.error("Email send error:", e);
+    return c.json({ error: e.message || "Unable to send email" }, 500);
+  }
 });
 
 // --- RBAC & SECURITY LAYER ---
@@ -270,6 +374,19 @@ app.post(`${BASE_PATH}/signup`, async (c) => {
     } catch (kvError) {
       console.error("Failed to create initial KV profile:", kvError);
       // Non-blocking error
+    }
+
+    if (isSmtpConfigured()) {
+      try {
+        await sendEmail({
+          to: email,
+          subject: "Welcome to Orygaco",
+          text: `Hi ${full_name || "there"},\n\nYour account has been created successfully. Welcome to Orygaco!`,
+          html: `<p>Hi ${full_name || "there"},</p><p>Your account has been created successfully. Welcome to Orygaco!</p>`
+        });
+      } catch (mailError: any) {
+        console.error("Signup welcome email failed:", mailError);
+      }
     }
   }
 
@@ -2359,6 +2476,91 @@ app.get(`${BASE_PATH}/slots`, async (c) => {
   const uniqueSlots = Array.from(new Map(slots.map((s:any) => [s.id, s])).values());
 
   return c.json(uniqueSlots);
+});
+
+// Razorpay Payment Integration
+app.post(`${BASE_PATH}/payments/create-order`, async (c) => {
+  const { user, error } = await getUser(c);
+  if (error) return c.json({ error }, 401);
+
+  const body = await c.req.json();
+  const { appointment_id, hospital_id, patient_id, amount, description, date, time, notes } = body;
+
+  if (!amount || !description) {
+    return c.json({ error: "Missing required payment fields" }, 400);
+  }
+
+  const authHeader = getRazorpayAuthHeader();
+  if (!authHeader) {
+    return c.json({ error: "Razorpay credentials are not configured" }, 500);
+  }
+
+  const orderPayload = {
+    amount,
+    currency: 'INR',
+    receipt: appointment_id || `receipt_${crypto.randomUUID()}`,
+    payment_capture: 1,
+    notes: {
+      appointment_id: appointment_id || '',
+      hospital_id: hospital_id ? String(hospital_id) : '',
+      patient_id: patient_id ? String(patient_id) : '',
+      created_by: user.id,
+      ...(date ? { date } : {}),
+      ...(time ? { time } : {}),
+      ...(notes ? notes : {}),
+    },
+  };
+
+  const razorpayRes = await fetch(`${RAZORPAY_API_BASE}/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: authHeader,
+    },
+    body: JSON.stringify(orderPayload),
+  });
+
+  const razorpayJson = await razorpayRes.json().catch(() => null);
+  if (!razorpayRes.ok) {
+    const message = razorpayJson?.error?.description || razorpayJson?.error || 'Razorpay order creation failed';
+    return c.json({ error: message }, razorpayRes.status);
+  }
+
+  return c.json({
+    orderId: razorpayJson.id,
+    amount: razorpayJson.amount,
+    currency: razorpayJson.currency,
+    receipt: razorpayJson.receipt,
+    notes: razorpayJson.notes || {},
+  });
+});
+
+app.post(`${BASE_PATH}/payments/verify`, async (c) => {
+  const { user, error } = await getUser(c);
+  if (error) return c.json({ error }, 401);
+
+  const body = await c.req.json();
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature, appointment_id } = body;
+
+  if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+    return c.json({ error: "Missing required verification fields" }, 400);
+  }
+
+  if (!RAZORPAY_KEY_SECRET) {
+    return c.json({ error: "Razorpay secret is not configured" }, 500);
+  }
+
+  const expectedSignature = await computeRazorpaySignature(razorpay_order_id, razorpay_payment_id);
+  if (!timingSafeEqual(expectedSignature, razorpay_signature)) {
+    return c.json({ success: false, error: "Invalid payment signature", appointmentId: appointment_id || null }, 400);
+  }
+
+  return c.json({
+    success: true,
+    paymentId: razorpay_payment_id,
+    appointmentId: appointment_id || null,
+    message: "Payment signature verified",
+  });
 });
 
 // Atomic Booking Endpoint Override
