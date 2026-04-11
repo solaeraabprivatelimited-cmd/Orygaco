@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import logo from 'figma:asset/79875bb7427953c37958c445f51a4ce2f3d7aa79.png';
+import logo from '/Oryga P NILL.png';
 import OrygaDNill from '../../imports/OrygaDNill';
 import OrygaPNill from '../../imports/OrygaPNill-226-129';
 import { supabase } from '@/lib/supabase';
