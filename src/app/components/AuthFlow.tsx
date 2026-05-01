@@ -1,5 +1,5 @@
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { auth } from "../../lib/firebase";
+// import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth"; // disabled: no SMS provider
+// import { auth } from "../../lib/firebase"; // disabled
 import { useState } from 'react';
 import { Mail, Lock, Phone, User, Building, Briefcase, Shield, ArrowLeft, Eye, EyeOff, Heart, Calendar, FileText } from 'lucide-react';
 import { Button } from './ui/button';
@@ -589,7 +589,7 @@ const handleSendOTP = async () => {
               </div>
 
               <div className="space-y-4">
-                {userType === 'patient' ? (
+                {false ? (
                   <>
                     <div>
                       <Label htmlFor="phone">Mobile Number</Label>
@@ -619,7 +619,7 @@ const handleSendOTP = async () => {
                       {loading ? 'Sending OTP…' : 'Get OTP'}
                     </Button>
                   </>
-                ) : (
+                ) : ( // ← all tiers use this email+password branch
                   <>
                     {showResend && (
                       <Alert variant="destructive" className="mb-4">
