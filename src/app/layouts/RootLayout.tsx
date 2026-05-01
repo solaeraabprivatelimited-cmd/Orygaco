@@ -9,6 +9,7 @@ import { ORYAContainer } from '../components/orya/ORYAContainer';
 import { useAppNavigate, pathToView } from '../hooks/useAppNavigate';
 import { User } from 'lucide-react';
 import OrygaPNill from '../../imports/OrygaPNill';
+import { Toaster } from 'sonner';
 
 function ORYARouteSync() {
   const { setContext } = useORYA();
@@ -313,6 +314,7 @@ export function RootLayout() {
     <AuthProvider>
       <SecurityProvider>
         <ORYAProvider>
+          <Toaster position="top-center" richColors closeButton duration={4000} />
           <LayoutShell />
         </ORYAProvider>
       </SecurityProvider>
