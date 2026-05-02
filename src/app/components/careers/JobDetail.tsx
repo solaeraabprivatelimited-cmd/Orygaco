@@ -18,11 +18,13 @@ interface Props {
   onApplied: () => void;
 }
 
-export function JobDetail({ job, userId, applied, onBack, onApplied }: Props) {
+export function JobDetail({ job, userId, applied: appliedProp, onBack, onApplied }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [coverNote, setCoverNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [localApplied, setLocalApplied] = useState(false);
   const org = job.organization;
+  const applied = appliedProp || localApplied;
 
   const handleApply = async () => {
     if (!userId) {
@@ -36,6 +38,7 @@ export function JobDetail({ job, userId, applied, onBack, onApplied }: Props) {
     setSubmitting(true);
     try {
       await applyToJob(job.id, userId, coverNote);
+      setLocalApplied(true);
       toast.success('Application submitted!');
       onApplied();
     } catch (err: any) {

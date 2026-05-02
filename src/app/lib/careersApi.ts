@@ -86,6 +86,12 @@ export async function applyToJob(
   applicantId: string,
   coverNote: string
 ) {
+  // Guard against duplicate applications (unique constraint on job_id+applicant_id)
+  const existing = await checkExistingApplication(jobId, applicantId);
+  if (existing) {
+    throw new Error('You have already applied to this job.');
+  }
+
   const { data, error } = await supabase
     .from('career_applications')
     .insert({
