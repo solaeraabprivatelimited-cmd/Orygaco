@@ -37,7 +37,8 @@ const VIEW_TO_PATH: Record<string, string> = {
   'doctor-blog-management': '/doctor/blogs',
   'hospital-admin': '/hospital-admin',
   'teleconsult': '/teleconsult',
-  'job-marketplace': '/jobs',
+  'job-marketplace': '/careers',
+  'careers': '/careers',
 };
 
 const PATH_TO_VIEW: Record<string, string> = {};

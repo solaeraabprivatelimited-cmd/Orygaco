@@ -30,6 +30,7 @@ import { DoctorBlogManagement } from './components/DoctorBlogManagement';
 import { HospitalAdmin } from './components/HospitalAdmin';
 import { TeleconsultPage } from './components/TeleconsultPage';
 import { JobMarketplace } from './components/JobMarketplace';
+import { CareersLayout } from './components/careers/CareersLayout';
 
 function NotFound() {
   return (
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
       { path: 'hospitals', Component: HospitalsPage },
       { path: 'hospitals/:id', Component: HospitalDetailPage },
       { path: 'emergency', Component: EmergencyMode },
+      { path: 'careers', Component: CareersLayout },
 
       // === Auth Pages ===
       { path: 'auth', Component: AuthFlow },
