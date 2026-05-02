@@ -5,6 +5,7 @@ export type UserRole = 'guest' | 'patient' | 'doctor' | 'hospital';
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  loading: boolean;
   userRole: UserRole;
   setUserRole: (role: UserRole) => void;
   login: (role: UserRole) => void;
@@ -13,6 +14,7 @@ interface AuthContextType {
 
 const defaultAuthContext: AuthContextType = {
   isAuthenticated: false,
+  loading: true,
   userRole: 'guest',
   setUserRole: () => {},
   login: () => {},
@@ -27,36 +29,41 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole>('guest');
 
   useEffect(() => {
     const checkSession = async () => {
-      let { data: { session } } = await supabase.auth.getSession();
+      try {
+        let { data: { session } } = await supabase.auth.getSession();
 
-      if (!session) {
-        const { data } = await supabase.auth.refreshSession();
-        session = data.session;
-      }
-
-      const customToken = localStorage.getItem('authToken');
-      const customUser = localStorage.getItem('user');
-
-      if (session) {
-        setIsAuthenticated(true);
-        const role = session.user.user_metadata?.role as UserRole || 'patient';
-        setUserRole(role);
-      } else if (customToken && customUser) {
-        setIsAuthenticated(true);
-        try {
-          const parsedUser = JSON.parse(customUser);
-          setUserRole(parsedUser.role || 'patient');
-        } catch (e) {
-          console.error('Error parsing custom user:', e);
-          setUserRole('patient');
+        if (!session) {
+          const { data } = await supabase.auth.refreshSession();
+          session = data.session;
         }
-      } else {
-        setIsAuthenticated(false);
-        setUserRole('guest');
+
+        const customToken = localStorage.getItem('authToken');
+        const customUser = localStorage.getItem('user');
+
+        if (session) {
+          setIsAuthenticated(true);
+          const role = session.user.user_metadata?.role as UserRole || 'patient';
+          setUserRole(role);
+        } else if (customToken && customUser) {
+          setIsAuthenticated(true);
+          try {
+            const parsedUser = JSON.parse(customUser);
+            setUserRole(parsedUser.role || 'patient');
+          } catch (e) {
+            console.error('Error parsing custom user:', e);
+            setUserRole('patient');
+          }
+        } else {
+          setIsAuthenticated(false);
+          setUserRole('guest');
+        }
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -100,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userRole, setUserRole, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, loading, userRole, setUserRole, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

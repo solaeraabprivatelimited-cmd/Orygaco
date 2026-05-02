@@ -60,7 +60,9 @@ function AuthRedirector() {
   const pathname = location.pathname;
 
   useEffect(() => {
-    if (isAuthenticated && (pathname === '/' || pathname.startsWith('/auth'))) {
+    // Don't redirect away from these — they handle their own navigation
+    const isCallbackPath = pathname === '/auth/callback' || pathname === '/auth/reset-password';
+    if (!isCallbackPath && isAuthenticated && (pathname === '/' || pathname.startsWith('/auth'))) {
       const dashboard =
         userRole === 'doctor'
           ? '/doctor'
@@ -238,8 +240,16 @@ function Footer() {
 }
 
 function ProtectedOutlet() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const routerNavigate = useNavigate();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (

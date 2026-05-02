@@ -14,6 +14,7 @@ import { HospitalsPage } from './components/HospitalsPage';
 import { HospitalDetailPage } from './components/HospitalDetailPage';
 import { EmergencyMode } from './components/EmergencyMode';
 import { AuthFlow } from './components/AuthFlow';
+import { AuthCallback } from './components/AuthCallback';
 import { PatientDashboard } from './components/PatientDashboard';
 import { PatientAppointments } from './components/PatientAppointments';
 import { PatientProfile } from './components/PatientProfile';
@@ -68,6 +69,8 @@ export const router = createBrowserRouter([
       { path: 'auth/doctor/signup', Component: AuthFlow },
       { path: 'auth/hospital', Component: AuthFlow },
       { path: 'auth/hospital/signup', Component: AuthFlow },
+      { path: 'auth/callback', Component: AuthCallback },
+      { path: 'auth/reset-password', Component: AuthCallback },
 
       // === Protected: Patient Dashboard ===
       {
